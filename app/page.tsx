@@ -40,20 +40,6 @@ function HelpBanner() {
           <p><strong>Traduction :</strong> Écris le script en français, sélectionne la langue cible (étape 1), puis clique &quot;Traduire&quot;. Utilise LibreTranslate (open source). Vérifie toujours la traduction avant de générer.</p>
           <p><strong>⚠ Limite serveur :</strong> Le serveur TTS gratuit (Hugging Face Space) traite les requêtes pendant <strong>3 minutes maximum</strong>. Au-delà de ~60 répliques, le timeout est probable. Pour des dialogues longs, divise en plusieurs parties.</p>
           <p><strong>Audio généré :</strong> Hébergé sur Internet Archive (archive.org), accessible via QR code. Disponible ~10 minutes après génération (délai de traitement IA).</p>
-          <details className="mt-3">
-            <summary className="cursor-pointer font-semibold text-amber-800">Pourquoi l&apos;audio en cours de langue ? — Références RISS</summary>
-            <div className="mt-2 space-y-2 text-xs text-amber-900 border-t border-amber-200 pt-2">
-              <p>L&apos;exposition à des documents sonores authentiques est un levier central de l&apos;acquisition en langue vivante étrangère. Plusieurs axes sont documentés dans la littérature scientifique francophone :</p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li><strong>Écoute-acquisition</strong> : l&apos;écoute orientée vers la production (listening-as-acquisition) favorise l&apos;ancrage lexical et phonologique, distinctement de la simple écoute-compréhension (Évrard, 2017 — <em>Plus-value du visuel en CO LV1 anglais</em>, RISS dumas-01760327).</li>
-                <li><strong>Familiarisation phonologique</strong> : exposer l&apos;oreille à des sonorités et rythmes nouveaux est une priorité pour l&apos;enseignement des LVE, notamment au primaire (Bazelaire, 2012 — <em>Jeu et perspective actionnelle en LVE</em>, RISS dumas-00765301).</li>
-                <li><strong>Document sonore en classe</strong> : les activités de pré-écoute et post-écoute autour d&apos;un document sonore structurent les transactions didactiques en classe de langue (Forest &amp; Gruson, 2011 — <em>Gestion de l&apos;espace en classe de langues</em>, RISS hal-04050423).</li>
-                <li><strong>Prosodie et compréhension L2</strong> : les obstacles prosodiques (rythme, intonation) constituent un frein majeur à la compréhension orale en L2 ; l&apos;entraînement répété à l&apos;écoute de dialogues permet de les réduire (Bidenti, 2024 — <em>Obstacle prosodique CO italien L2</em>, RISS dumas-04828505).</li>
-                <li><strong>Remédiation aurale</strong> : un diagnostic ciblé sur la compréhension aurale, combiné à une exposition sonore structurée, améliore l&apos;acquisition du lexique en L2 (Jouannaud, 2021 — <em>Remédiation — compréhension aurale anglais</em>, RISS tel-03235381).</li>
-              </ul>
-              <p className="text-amber-700 italic">Sources vérifiées dans le corpus RISS (522 627 articles scientifiques francophones).</p>
-            </div>
-          </details>
         </div>
       )}
     </div>
@@ -159,6 +145,47 @@ export default function Home() {
 
       {result && <AudioResult result={result} />}
       <HistoryPanel />
+
+      {/* Ancrage scientifique */}
+      <div className="mt-8 border border-blue-100 rounded-2xl bg-blue-50 p-5">
+        <h2 className="text-sm font-bold text-blue-800 mb-1">Ancrage scientifique</h2>
+        <p className="text-xs text-blue-700 mb-3">
+          Pourquoi utiliser des dialogues audio en cours de langue étrangère ?
+          Cinq axes documentés dans la littérature scientifique francophone (corpus RISS).
+        </p>
+        <ul className="space-y-2 text-xs text-blue-900">
+          <li>
+            <strong>Écoute-acquisition</strong> — L&apos;écoute orientée vers la production
+            (<em>listening-as-acquisition</em>) favorise l&apos;ancrage lexical et phonologique,
+            au-delà de la simple écoute-compréhension.
+            <span className="block text-blue-500 mt-0.5">Évrard, 2017 · RISS dumas-01760327</span>
+          </li>
+          <li>
+            <strong>Familiarisation phonologique</strong> — Exposer l&apos;oreille à des sonorités
+            et rythmes nouveaux est une priorité de l&apos;enseignement des langues vivantes étrangères.
+            <span className="block text-blue-500 mt-0.5">Bazelaire, 2012 · RISS dumas-00765301</span>
+          </li>
+          <li>
+            <strong>Document sonore en classe</strong> — Les activités de pré-écoute et post-écoute
+            autour d&apos;un document sonore structurent les transactions didactiques en classe de langue.
+            <span className="block text-blue-500 mt-0.5">Forest &amp; Gruson, 2011 · RISS hal-04050423</span>
+          </li>
+          <li>
+            <strong>Prosodie et compréhension L2</strong> — Les obstacles prosodiques (rythme, intonation)
+            freinent la compréhension orale en L2 ; l&apos;entraînement répété à l&apos;écoute de dialogues
+            permet de les réduire.
+            <span className="block text-blue-500 mt-0.5">Bidenti, 2024 · RISS dumas-04828505</span>
+          </li>
+          <li>
+            <strong>Remédiation aurale et lexique</strong> — Une exposition sonore structurée améliore
+            l&apos;acquisition du lexique en L2.
+            <span className="block text-blue-500 mt-0.5">Jouannaud, 2021 · RISS tel-03235381</span>
+          </li>
+        </ul>
+        <p className="mt-3 text-xs text-blue-400 italic">
+          Sources vérifiées dans le corpus RISS — 522 627 articles scientifiques francophones.
+        </p>
+      </div>
     </main>
   )
 }
