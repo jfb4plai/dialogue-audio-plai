@@ -24,8 +24,15 @@ export default function AudioResult({ result }: Props) {
         Audio généré — {result.duration_seconds}s
       </h2>
 
-      {/* Audio player */}
-      <audio controls className="w-full mb-4" src={result.audio_url} />
+      {/* Audio player — base64 pour lecture immédiate, URL IA pour le lien permanent */}
+      <audio
+        controls
+        className="w-full mb-4"
+        src={result.audio_data ? `data:audio/mpeg;base64,${result.audio_data}` : result.audio_url}
+      />
+      <p className="text-xs text-amber-600 mb-3">
+        ⏳ Le lien QR code devient actif ~10 minutes après la génération (délai Internet Archive).
+      </p>
 
       {/* QR code */}
       <div className="flex flex-col items-center mb-4">

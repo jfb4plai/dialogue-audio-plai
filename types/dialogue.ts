@@ -28,6 +28,7 @@ export interface Segment {
 
 export interface GenerateResult {
   audio_url: string
+  audio_data?: string   // base64 MP3 for immediate playback
   qr_base64: string
   duration_seconds: number
   segments: Segment[]
