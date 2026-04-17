@@ -39,7 +39,7 @@ function HelpBanner() {
           — même voix, une ligne par phrase.</p>
           <p><strong>Locuteurs :</strong> 2 à 4 (A, B, C, D). Chaque lettre correspond à une voix distincte.</p>
           <p><strong>Importer Word :</strong> Le bouton &quot;Importer Word&quot; extrait le texte d&apos;un fichier .docx. Vérifie ensuite que chaque réplique commence bien par A:, B:, etc.</p>
-          <p><strong>Traduction :</strong> Écris le script en français, sélectionne la langue cible (étape 1), puis clique &quot;Traduire&quot;. Utilise MyMemory (service gratuit). Vérifie toujours la traduction avant de générer. <strong>⚠ Limite : 5 000 caractères par jour</strong> (service gratuit sans inscription).</p>
+          <p><strong>Traduction :</strong> Écris le script en français, sélectionne la langue cible (étape 1), puis clique &quot;Traduire&quot;. Utilise DeepL (haute qualité). Vérifie toujours la traduction avant de générer. <strong>⚠ L&apos;option traduction ne sera disponible que dans la limite du crédit disponible. Si vous arrivez à dépasser la limite, contactez le Pôle.</strong></p>
           <p><strong>⚠ Limite serveur :</strong> Le serveur TTS gratuit (Hugging Face Space) traite les requêtes pendant <strong>3 minutes maximum</strong>. Au-delà de ~60 répliques, le timeout est probable. Pour des dialogues longs, divise en plusieurs parties.</p>
           <p><strong>Audio généré :</strong> Hébergé sur Internet Archive (archive.org), accessible via QR code. Disponible ~10 minutes après génération (délai de traitement IA).</p>
         </div>

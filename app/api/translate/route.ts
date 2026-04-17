@@ -1,25 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-async function translateWithMyMemory(text: string, sourceLang: string, targetLang: string): Promise<string> {
-  const langpair = `${sourceLang}|${targetLang}`
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(langpair)}`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`MyMemory HTTP ${res.status}`)
+const DEEPL_API_KEY = process.env.DEEPL_API_KEY ?? ''
+
+// DeepL language codes
+const DEEPL_CODES: Record<string, string> = {
+  nl: 'NL',
+  de: 'DE',
+  en: 'EN-GB',
+  fr: 'FR',
+}
+
+async function translateWithDeepL(text: string, targetLang: string): Promise<string> {
+  const deepLTarget = DEEPL_CODES[targetLang] ?? targetLang.toUpperCase()
+  const res = await fetch('https://api-free.deepl.com/v2/translate', {
+    method: 'POST',
+    headers: {
+      'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text: [text],
+      source_lang: 'FR',
+      target_lang: deepLTarget,
+    }),
+  })
+  if (!res.ok) throw new Error(`DeepL HTTP ${res.status}`)
   const data = await res.json()
-  const translated = data?.responseData?.translatedText
-  if (!translated || translated === text) throw new Error('No translation')
+  const translated = data?.translations?.[0]?.text
+  if (!translated) throw new Error('No translation returned')
   return translated
 }
 
 export async function POST(req: NextRequest) {
-  const { script, sourceLang, targetLang } = await req.json()
+  const { script, targetLang } = await req.json()
 
   if (!script || !targetLang) {
     return NextResponse.json({ error: 'script et targetLang requis' }, { status: 400 })
   }
 
+  if (!DEEPL_API_KEY) {
+    return NextResponse.json({ error: 'Clé DeepL non configurée' }, { status: 500 })
+  }
+
   const lines = script.split('\n')
-  const src = sourceLang ?? 'fr'
 
   const translated = await Promise.all(lines.map(async (line: string) => {
     const match = line.match(/^([A-D]):\s*(.+)$/)
@@ -29,10 +52,10 @@ export async function POST(req: NextRequest) {
     const text = match[2]
 
     try {
-      const translatedText = await translateWithMyMemory(text, src, targetLang)
+      const translatedText = await translateWithDeepL(text, targetLang)
       return `${label}: ${translatedText}`
     } catch {
-      return line // fallback: keep original
+      return line
     }
   }))
 

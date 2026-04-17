@@ -126,7 +126,7 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
 
       {canTranslate && (
         <p className="mt-1 text-xs text-gray-400">
-          Traduction via MyMemory · limite gratuite : 5 000 caractères/jour
+          Traduction via DeepL · disponible dans la limite du crédit — en cas de dépassement, contacter le Pôle.
         </p>
       )}
       {translateError && (
