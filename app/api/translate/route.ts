@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const LIBRETRANSLATE_URL = process.env.LIBRETRANSLATE_URL ?? 'https://translate.argosopentech.com'
+async function translateWithMyMemory(text: string, sourceLang: string, targetLang: string): Promise<string> {
+  const langpair = `${sourceLang}|${targetLang}`
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(langpair)}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`MyMemory HTTP ${res.status}`)
+  const data = await res.json()
+  const translated = data?.responseData?.translatedText
+  if (!translated || translated === text) throw new Error('No translation')
+  return translated
+}
 
 export async function POST(req: NextRequest) {
   const { script, sourceLang, targetLang } = await req.json()
@@ -9,8 +18,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'script et targetLang requis' }, { status: 400 })
   }
 
-  // Translate only the text part after each "X:" label
   const lines = script.split('\n')
+  const src = sourceLang ?? 'fr'
 
   const translated = await Promise.all(lines.map(async (line: string) => {
     const match = line.match(/^([A-D]):\s*(.+)$/)
@@ -20,18 +29,8 @@ export async function POST(req: NextRequest) {
     const text = match[2]
 
     try {
-      const res = await fetch(`${LIBRETRANSLATE_URL}/translate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          q: text,
-          source: sourceLang ?? 'fr',
-          target: targetLang,
-          format: 'text',
-        }),
-      })
-      const data = await res.json()
-      return `${label}: ${data.translatedText ?? text}`
+      const translatedText = await translateWithMyMemory(text, src, targetLang)
+      return `${label}: ${translatedText}`
     } catch {
       return line // fallback: keep original
     }
