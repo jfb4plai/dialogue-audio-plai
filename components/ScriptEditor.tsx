@@ -124,6 +124,11 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
         placeholder={"A: Goedemorgen!\nB: Goedemorgen! Hoe gaat het?\nA: Het gaat goed, dank je."}
       />
 
+      {canTranslate && (
+        <p className="mt-1 text-xs text-gray-400">
+          Traduction via MyMemory · limite gratuite : 5 000 caractères/jour
+        </p>
+      )}
       {translateError && (
         <p className="mt-1 text-xs text-red-500">{translateError}</p>
       )}
