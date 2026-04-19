@@ -45,8 +45,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const {
     locale = 'nl_BE',
-    niveau = 'S5',
-    filiere = 'service en salle',
+    niveau = '',
+    filiere = '',
+    contexte = '',
     sujet = '',
     nb_repliques = 20,
     registre = 'mixte',
@@ -59,6 +60,9 @@ export async function POST(req: NextRequest) {
   const vocNote = vocabulaire.trim()
     ? `\n- Vocabulaire à inclure obligatoirement : ${vocabulaire.trim()}`
     : ''
+  const niveauNote = niveau.trim() ? `\n- Niveau : ${niveau.trim()}` : ''
+  const filiereNote = filiere.trim() ? `\n- Filière / domaine : ${filiere.trim()}` : ''
+  const contexteNote = contexte.trim() ? `\n- Contexte situationnel : ${contexte.trim()}` : ''
 
   const systemPrompt = `Tu génères des scripts de dialogue pédagogiques pour des enseignants de la Fédération Wallonie-Bruxelles.
 
@@ -80,10 +84,8 @@ A: Komt u maar mee, meneer.`
 Paramètres :
 - Type : ${locuteurs}
 - Nombre de répliques : ${nb_repliques}
-- Niveau scolaire : ${niveau} professionnel FWB
-- Filière : ${filiere}
-- Sujet : ${sujet || 'conversation professionnelle courante'}
-- Registre : ${registre}${vocNote}
+- Sujet : ${sujet || 'conversation courante'}
+- Registre : ${registre}${niveauNote}${filiereNote}${contexteNote}${vocNote}
 
 Génère maintenant le dialogue. Format strict : une réplique par ligne, préfixe A: ou B: uniquement.`
 

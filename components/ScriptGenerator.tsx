@@ -7,14 +7,6 @@ interface Props {
   onGenerated: (script: string) => void
 }
 
-const FILIERES = [
-  'service en salle', 'cuisine', 'pâtisserie', 'boucherie',
-  'coiffure', 'esthétique', 'soins à la personne', 'œnologie',
-  'hôtellerie', 'commerce', 'autre',
-]
-
-const NIVEAUX = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7']
-
 const LOCALE_NAMES: Record<string, string> = {
   nl_BE: 'Flamand (Belgique)',
   nl_NL: 'Néerlandais (Pays-Bas)',
@@ -28,8 +20,9 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated }: P
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [niveau, setNiveau] = useState('S5')
-  const [filiere, setFiliere] = useState('service en salle')
+  const [niveau, setNiveau] = useState('')
+  const [filiere, setFiliere] = useState('')
+  const [contexte, setContexte] = useState('')
   const [sujet, setSujet] = useState('')
   const [nbRepliques, setNbRepliques] = useState(20)
   const [registre, setRegistre] = useState('mixte')
@@ -47,6 +40,7 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated }: P
           locale,
           niveau,
           filiere,
+          contexte,
           sujet,
           nb_repliques: nbRepliques,
           registre,
@@ -107,25 +101,43 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated }: P
           {/* Niveau + Filière */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Niveau</label>
-              <select
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Niveau <span className="text-gray-400">(optionnel)</span>
+              </label>
+              <input
+                type="text"
                 value={niveau}
                 onChange={e => setNiveau(e.target.value)}
+                placeholder="S5 pro, débutant, adulte..."
                 className="w-full text-sm border border-gray-300 rounded-lg px-2 py-1.5"
-              >
-                {NIVEAUX.map(n => <option key={n} value={n}>{n} professionnel</option>)}
-              </select>
+              />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Filière</label>
-              <select
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Filière / Domaine <span className="text-gray-400">(optionnel)</span>
+              </label>
+              <input
+                type="text"
                 value={filiere}
                 onChange={e => setFiliere(e.target.value)}
+                placeholder="cuisine, tourisme, santé..."
                 className="w-full text-sm border border-gray-300 rounded-lg px-2 py-1.5"
-              >
-                {FILIERES.map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
+              />
             </div>
+          </div>
+
+          {/* Contexte situationnel */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Contexte situationnel <span className="text-gray-400">(optionnel)</span>
+            </label>
+            <input
+              type="text"
+              value={contexte}
+              onChange={e => setContexte(e.target.value)}
+              placeholder="au restaurant, chez le médecin, en classe, au marché..."
+              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-1.5"
+            />
           </div>
 
           {/* Sujet */}
