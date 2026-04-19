@@ -34,15 +34,15 @@ function HelpBanner() {
       </button>
       {open && (
         <div className="px-4 pb-4 text-amber-900 space-y-2 text-xs leading-relaxed">
-          <p><strong>Format du script :</strong> <strong className="text-red-700">Chaque phrase ou paragraphe doit commencer par une lettre majuscule suivie de deux-points.</strong> Les lignes sans préfixe sont ignorées.<br />
-          Exemple dialogue : <code>A: Bonjour !</code> puis <code>B: Bonjour, comment vas-tu ?</code><br />
-          Exemple monologue : <code>A: Hello, my name is Sarah.</code> puis <code>A: Every weekend, I go to the bakery.</code><br />
-          — même voix, une ligne par phrase.</p>
-          <p><strong>Locuteurs :</strong> 2 à 4 (A, B, C, D). Chaque lettre correspond à une voix distincte.</p>
-          <p><strong>Importer Word :</strong> Le bouton &quot;Importer Word&quot; extrait le texte d&apos;un fichier .docx. Vérifie ensuite que chaque réplique commence bien par A:, B:, etc.</p>
+          <p><strong>✨ Générer le script avec l&apos;IA :</strong> Ouvre le panneau violet en étape 3, remplis le niveau, le domaine, le sujet et le nombre de répliques. Le script est généré directement dans la langue cible. <strong>Max 10 générations/heure.</strong></p>
           <p><strong>Traduction :</strong> Écris le script en français, sélectionne la langue cible (étape 1), puis clique &quot;Traduire&quot;. Utilise DeepL (haute qualité). Vérifie toujours la traduction avant de générer. <strong>⚠ L&apos;option traduction ne sera disponible que dans la limite du crédit disponible. Si vous arrivez à dépasser la limite, contactez le Pôle.</strong></p>
-          <p><strong>⚠ Limite serveur :</strong> Le serveur TTS gratuit (Hugging Face Space) traite les requêtes pendant <strong>3 minutes maximum</strong>. Au-delà de ~60 répliques, le timeout est probable. Pour des dialogues longs, divise en plusieurs parties.</p>
-          <p><strong>Audio généré :</strong> Hébergé sur Internet Archive (archive.org), accessible via QR code. Disponible ~10 minutes après génération (délai de traitement IA).</p>
+          <p><strong>Format du script :</strong> <strong className="text-red-700">Chaque phrase doit commencer par une lettre majuscule suivie de deux-points.</strong> Les lignes sans préfixe sont ignorées. Rafraîchis la page pour réinitialiser le script.<br />
+          Dialogue : <code>A: Bonjour !</code> / <code>B: Bonjour, comment vas-tu ?</code><br />
+          Monologue : <code>A: Hello.</code> / <code>A: Every weekend, I go to the bakery.</code> — même voix, une ligne par phrase.</p>
+          <p><strong>Locuteurs :</strong> 2 à 4 (A, B, C, D). Chaque lettre correspond à une voix distincte.</p>
+          <p><strong>Importer Word :</strong> Extrait le texte d&apos;un .docx. Vérifie ensuite que chaque réplique commence bien par A:, B:, etc.</p>
+          <p><strong>⚠ Limite serveur TTS :</strong> Le serveur Hugging Face traite <strong>3 minutes maximum</strong>. Au-delà de ~60 répliques, le timeout est probable. Divise en plusieurs parties si nécessaire.</p>
+          <p><strong>Audio généré :</strong> Hébergé sur Internet Archive, accessible via QR code. Disponible ~10 minutes après génération.</p>
         </div>
       )}
     </div>
