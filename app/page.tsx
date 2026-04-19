@@ -101,7 +101,7 @@ export default function Home() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Dialogue Audio</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Génération de dialogues audio multivoix pour l&apos;enseignement
+          Génération de dialogues audio multivoix — avec assistant IA contextuel
         </p>
       </div>
 
