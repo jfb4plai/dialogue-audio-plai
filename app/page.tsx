@@ -7,6 +7,7 @@ import SilenceSlider from '@/components/SilenceSlider'
 import GenerateButton from '@/components/GenerateButton'
 import AudioResult from '@/components/AudioResult'
 import HistoryPanel from '@/components/HistoryPanel'
+import ScriptGenerator from '@/components/ScriptGenerator'
 import { VoicesConfig, Speaker, GenerateResult } from '@/types/dialogue'
 import { callHFSpace } from '@/lib/hf-api'
 
@@ -127,6 +128,11 @@ export default function Home() {
         <div className="mb-2 text-xs font-semibold text-blue-600 uppercase tracking-wide">
           Étape 3 — Script
         </div>
+        <ScriptGenerator
+          locale={locale}
+          speakerCount={speakers.length}
+          onGenerated={setScript}
+        />
         <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
 
         {/* Silence */}
