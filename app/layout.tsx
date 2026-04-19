@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body className="bg-gray-50 min-h-screen">
         <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-          <Image src="/plai-logo.jpg" alt="PLAI" width={200} height={80} className="object-contain" priority />
+          <Image src="/plai-logo.jpg" alt="PLAI" width={200} height={80} style={{ height: 'auto' }} className="object-contain" priority />
           <AuthWidget />
         </header>
         {children}
