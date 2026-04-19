@@ -158,36 +158,56 @@ export default function Home() {
       <div className="mt-8 border border-blue-100 rounded-2xl bg-blue-50 p-5">
         <h2 className="text-sm font-bold text-blue-800 mb-1">Ancrage scientifique</h2>
         <p className="text-xs text-blue-700 mb-3">
-          Pourquoi utiliser des dialogues audio en cours de langue étrangère ?
-          Cinq axes documentés dans la littérature scientifique francophone (corpus RISS).
+          Deux axes documentés dans le corpus RISS (522 627 articles scientifiques francophones) :
+          l&apos;efficacité des dialogues audio pour l&apos;acquisition en LVE, et l&apos;importance de
+          contextualiser l&apos;apprentissage dans le domaine professionnel pour donner du sens et motiver.
         </p>
-        <ul className="space-y-2 text-xs text-blue-900">
+
+        <p className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">Axe 1 — Dialogues audio et acquisition en LVE</p>
+        <ul className="space-y-2 text-xs text-blue-900 mb-4">
           <li>
-            <strong>Écoute-acquisition</strong> — L&apos;écoute orientée vers la production
-            (<em>listening-as-acquisition</em>) favorise l&apos;ancrage lexical et phonologique,
-            au-delà de la simple écoute-compréhension.
+            <strong>Écoute-acquisition</strong> — L&apos;écoute orientée vers la production favorise l&apos;ancrage lexical et phonologique, au-delà de la simple écoute-compréhension.
             <span className="block text-blue-500 mt-0.5">Évrard, 2017 · RISS dumas-01760327</span>
           </li>
           <li>
-            <strong>Familiarisation phonologique</strong> — Exposer l&apos;oreille à des sonorités
-            et rythmes nouveaux est une priorité de l&apos;enseignement des langues vivantes étrangères.
+            <strong>Familiarisation phonologique</strong> — Exposer l&apos;oreille à des sonorités et rythmes nouveaux est une priorité de l&apos;enseignement des LVE.
             <span className="block text-blue-500 mt-0.5">Bazelaire, 2012 · RISS dumas-00765301</span>
           </li>
           <li>
-            <strong>Document sonore en classe</strong> — Les activités de pré-écoute et post-écoute
-            autour d&apos;un document sonore structurent les transactions didactiques en classe de langue.
+            <strong>Document sonore en classe</strong> — Les activités de pré- et post-écoute autour d&apos;un document sonore structurent les transactions didactiques en classe de langue.
             <span className="block text-blue-500 mt-0.5">Forest &amp; Gruson, 2011 · RISS hal-04050423</span>
           </li>
           <li>
-            <strong>Prosodie et compréhension L2</strong> — Les obstacles prosodiques (rythme, intonation)
-            freinent la compréhension orale en L2 ; l&apos;entraînement répété à l&apos;écoute de dialogues
-            permet de les réduire.
+            <strong>Prosodie et compréhension L2</strong> — L&apos;entraînement répété à l&apos;écoute de dialogues structurés réduit les obstacles prosodiques (rythme, intonation) en L2.
             <span className="block text-blue-500 mt-0.5">Bidenti, 2024 · RISS dumas-04828505</span>
           </li>
           <li>
-            <strong>Remédiation aurale et lexique</strong> — Une exposition sonore structurée améliore
-            l&apos;acquisition du lexique en L2.
+            <strong>Acquisition lexicale</strong> — Une exposition sonore structurée et répétée améliore l&apos;acquisition du lexique en L2.
             <span className="block text-blue-500 mt-0.5">Jouannaud, 2021 · RISS tel-03235381</span>
+          </li>
+        </ul>
+
+        <p className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">Axe 2 — Contextualisation et motivation en filière professionnelle</p>
+        <ul className="space-y-2 text-xs text-blue-900">
+          <li>
+            <strong>Contextualisation en lycée professionnel</strong> — Ancrer les apprentissages de langue dans la filière métier est un moyen efficient de mobiliser les apprenants.
+            <span className="block text-blue-500 mt-0.5">Payet, 2022 · RISS dumas-03984644</span>
+          </li>
+          <li>
+            <strong>Langue sur objectifs spécifiques</strong> — L&apos;ancrage dans le domaine professionnel réel rend le curriculum plus opérationnel et l&apos;apprentissage plus signifiant.
+            <span className="block text-blue-500 mt-0.5">Sowa, 2022 · RISS W4225401879</span>
+          </li>
+          <li>
+            <strong>Motivation intrinsèque</strong> — L&apos;intérêt attribué à une tâche et son ancrage situationnel sont des leviers directs de motivation intrinsèque en LVE.
+            <span className="block text-blue-500 mt-0.5">Desaivres &amp; Davoli, 2025 · RISS dumas-05216415</span>
+          </li>
+          <li>
+            <strong>Productions concrètes et engagement</strong> — La dimension contextualisée des productions est un levier de motivation spécifique aux élèves de lycée professionnel.
+            <span className="block text-blue-500 mt-0.5">Eucat, Khadraoui &amp; Dahman, 2023 · RISS dumas-04676095</span>
+          </li>
+          <li>
+            <strong>Dimension professionnelle en cours de langue</strong> — Intégrer le contexte métier dans un cours de LVE a un effet positif sur l&apos;engagement et la valorisation des compétences.
+            <span className="block text-blue-500 mt-0.5">Leglinel Conti, 2021 · RISS dumas-03699714</span>
           </li>
         </ul>
         <p className="mt-3 text-xs text-blue-400 italic">
