@@ -30,6 +30,11 @@ export default function AuthWidget() {
     setLoading(true)
     setError(null)
     setMessage(null)
+    if (!sb) {
+      setError('Service non disponible (Supabase non configuré).')
+      setLoading(false)
+      return
+    }
     try {
       if (mode === 'login') {
         const { error } = await sb.auth.signInWithPassword({ email, password })
