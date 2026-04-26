@@ -12,8 +12,10 @@ const LOCALE_NAMES: Record<string, string> = {
   nl_BE: 'Flamand (Belgique)',
   nl_NL: 'Néerlandais (Pays-Bas)',
   fr_FR: 'Français',
+  fr_BE: 'Français (Belgique)',
   de_DE: 'Allemand',
   en_GB: 'Anglais (UK)',
+  es_ES: 'Espagnol',
 }
 
 // ── Dialogue generator ────────────────────────────────────────────────────────

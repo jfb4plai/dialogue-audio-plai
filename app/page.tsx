@@ -19,6 +19,21 @@ const DEFAULT_VOICES: VoicesConfig = {
       { id: 'nl_BE-rdh-medium', label: 'Rdh', gender: 'masculin' },
     ],
   },
+  es_ES: {
+    name: 'Espagnol',
+    voices: [
+      { id: 'es_ES-carlfm-x_low', label: 'Carlos', gender: 'masculin' },
+      { id: 'es_MX-ald-medium', label: 'Aldo', gender: 'masculin' },
+    ],
+  },
+  fr_BE: {
+    name: 'Français (Belgique)',
+    voices: [
+      { id: 'fr_FR-siwis-medium', label: 'Sylvie', gender: 'féminin' },
+      { id: 'fr_FR-upmc-pierre-medium', label: 'Pierre', gender: 'masculin' },
+      { id: 'fr_FR-gilles-low', label: 'Gilles', gender: 'masculin' },
+    ],
+  },
 }
 
 function HelpBanner() {

@@ -13,13 +13,15 @@ function estimateDuration(text: string): number {
   return Math.ceil(text.length / 50) * 3
 }
 
-// LibreTranslate language codes (source: always fr)
+// DeepL language codes (source: always fr)
 const LANG_CODES: Record<string, string> = {
   nl_BE: 'nl',
   nl_NL: 'nl',
   de_DE: 'de',
   en_GB: 'en',
   fr_FR: 'fr',
+  fr_BE: 'fr',
+  es_ES: 'es',
 }
 
 export default function ScriptEditor({ script, speakers, targetLocale, onChange }: Props) {

@@ -8,6 +8,7 @@ const DEEPL_CODES: Record<string, string> = {
   de: 'DE',
   en: 'EN-GB',
   fr: 'FR',
+  es: 'ES',
 }
 
 async function translateWithDeepL(text: string, targetLang: string): Promise<string> {

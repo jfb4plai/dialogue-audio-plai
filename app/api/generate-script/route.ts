@@ -11,8 +11,10 @@ const LOCALE_LABELS: Record<string, string> = {
   nl_BE: 'néerlandais de Belgique (flamand)',
   nl_NL: 'néerlandais des Pays-Bas',
   fr_FR: 'français',
+  fr_BE: 'français (Belgique)',
   de_DE: 'allemand',
   en_GB: 'anglais britannique (UK)',
+  es_ES: 'espagnol',
 }
 
 export async function POST(req: NextRequest) {
