@@ -59,7 +59,7 @@ function HelpBanner() {
           <p><strong>Importer Word :</strong> Extrait le texte d&apos;un .docx. Vérifie ensuite que chaque réplique commence bien par A:, B:, etc.</p>
           <p><strong>⚠ Limite serveur TTS (dialogue) :</strong> Le serveur Hugging Face traite <strong>3 minutes maximum</strong> via le proxy Vercel. Au-delà de ~60 répliques, divise en plusieurs parties. Le mode Podcast contourne cette limite en se connectant directement au serveur TTS.</p>
           <p><strong>Audio généré :</strong> Hébergé sur Internet Archive, accessible via QR code. Disponible ~10 minutes après génération.</p>
-          <p><strong>Langue complémentaire :</strong> Pour toute demande de langue non disponible, envoyez un email à <a href="mailto:jeanfrancois.beguin@ens.ecl.be" className="underline">jeanfrancois.beguin@ens.ecl.be</a></p>
+          <p><strong>Langues disponibles :</strong> néerlandais (BE), néerlandais (NL), français, français (Belgique), allemand, anglais (UK), espagnol. <em>Note : fr (Belgique) utilise des voix fr_FR — accent neutre France.</em> Pour toute demande de langue supplémentaire : <a href="mailto:jeanfrancois.beguin@ens.ecl.be" className="underline">jeanfrancois.beguin@ens.ecl.be</a></p>
         </div>
       )}
     </div>
