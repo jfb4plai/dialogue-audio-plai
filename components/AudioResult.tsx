@@ -184,7 +184,7 @@ export default function AudioResult({ result }: Props) {
       {/* Buttons */}
       <div className="flex flex-wrap gap-2">
         <a
-          href={result.audio_url} download="dialogue.mp3"
+          href={result.audio_url} download="dialogue.mp3" target="_blank" rel="noopener noreferrer"
           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
         >
           Télécharger MP3

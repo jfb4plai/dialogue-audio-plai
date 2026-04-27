@@ -11,6 +11,8 @@ import ScriptGenerator from '@/components/ScriptGenerator'
 import { VoicesConfig, Speaker, GenerateResult } from '@/types/dialogue'
 import { callHFSpace, callHFSpaceDirect, wakeHFSpace } from '@/lib/hf-api'
 
+const LS = { script: 'da_script', locale: 'da_locale', mode: 'da_mode', result: 'da_result', podcast: 'da_podcast' }
+
 const DEFAULT_VOICES: VoicesConfig = {
   nl_BE: {
     name: 'Flamand (Belgique)',
@@ -139,6 +141,27 @@ export default function Home() {
       .catch(() => {})
   }, [])
 
+  // ── Restore from localStorage on mount ───────────────────────────────────────
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(LS.script)
+      const l = localStorage.getItem(LS.locale)
+      const m = localStorage.getItem(LS.mode)
+      const r = localStorage.getItem(LS.result)
+      const p = localStorage.getItem(LS.podcast)
+      if (s) setScript(s)
+      if (l) setLocale(l)
+      if (m === 'dialogue' || m === 'podcast') setMode(m as 'dialogue' | 'podcast')
+      if (r) setResult(JSON.parse(r))
+      if (p) setPodcastResults(JSON.parse(p))
+    } catch {}
+  }, [])
+
+  // ── Persist script, locale, mode ─────────────────────────────────────────────
+  useEffect(() => { try { localStorage.setItem(LS.script, script) } catch {} }, [script])
+  useEffect(() => { try { localStorage.setItem(LS.locale, locale) } catch {} }, [locale])
+  useEffect(() => { try { localStorage.setItem(LS.mode, mode) } catch {} }, [mode])
+
   useEffect(() => {
     const available = voices[locale]?.voices ?? []
     setSpeakers(prev => prev.map((s, i) => ({
@@ -161,12 +184,15 @@ export default function Home() {
   const handleGenerate = async () => {
     setError(null)
     setResult(null)
+    setPodcastResults([])
+    try { localStorage.removeItem(LS.result); localStorage.removeItem(LS.podcast) } catch {}
     try {
       const res = await callHFSpace({
         script, speakers, silence_ms: silenceMs,
         item_title: `Dialogue ${locale}`,
       })
       setResult(res)
+      try { localStorage.setItem(LS.result, JSON.stringify({ ...res, audio_data: undefined })) } catch {}
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erreur inconnue')
     }
@@ -176,6 +202,7 @@ export default function Home() {
     setError(null)
     setResult(null)
     setPodcastResults([])
+    try { localStorage.removeItem(LS.result); localStorage.removeItem(LS.podcast) } catch {}
     // Wake up HF Space before starting (handles cold-start 503)
     try {
       setPodcastProgress('Vérification du serveur TTS...')
@@ -212,8 +239,13 @@ export default function Home() {
       }
     }
     setPodcastProgress(null)
-    if (allResults.length === 1) setResult(allResults[0])
-    else if (allResults.length > 1) setPodcastResults(allResults)
+    if (allResults.length === 1) {
+      setResult(allResults[0])
+      try { localStorage.setItem(LS.result, JSON.stringify({ ...allResults[0], audio_data: undefined })) } catch {}
+    } else if (allResults.length > 1) {
+      setPodcastResults(allResults)
+      try { localStorage.setItem(LS.podcast, JSON.stringify(allResults.map(r => ({ ...r, audio_data: undefined })))) } catch {}
+    }
   }
 
   const availableVoices = voices[locale]?.voices ?? []
