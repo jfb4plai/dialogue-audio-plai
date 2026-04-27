@@ -9,7 +9,7 @@ import AudioResult from '@/components/AudioResult'
 import HistoryPanel from '@/components/HistoryPanel'
 import ScriptGenerator from '@/components/ScriptGenerator'
 import { VoicesConfig, Speaker, GenerateResult } from '@/types/dialogue'
-import { callHFSpace, callHFSpaceDirect } from '@/lib/hf-api'
+import { callHFSpace, callHFSpaceDirect, wakeHFSpace } from '@/lib/hf-api'
 
 const DEFAULT_VOICES: VoicesConfig = {
   nl_BE: {
@@ -177,6 +177,16 @@ export default function Home() {
     setError(null)
     setResult(null)
     setPodcastResults([])
+    // Wake up HF Space before starting (handles cold-start 503)
+    try {
+      setPodcastProgress('Vérification du serveur TTS...')
+      await wakeHFSpace(msg => setPodcastProgress(msg))
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Serveur TTS indisponible')
+      setPodcastProgress(null)
+      return
+    }
+
     const episodes = splitPodcastScript(script, locale)
     const total = episodes.length
     const allResults: GenerateResult[] = []
