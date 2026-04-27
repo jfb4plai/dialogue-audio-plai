@@ -146,7 +146,6 @@ export default function Home() {
   // ── Restore from localStorage on mount ───────────────────────────────────────
   useEffect(() => {
     try {
-      const s = localStorage.getItem(LS.script)
       const l = localStorage.getItem(LS.locale)
       const m = localStorage.getItem(LS.mode)
       const r = localStorage.getItem(LS.result)
