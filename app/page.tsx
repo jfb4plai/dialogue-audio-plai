@@ -11,7 +11,7 @@ import ScriptGenerator from '@/components/ScriptGenerator'
 import { VoicesConfig, Speaker, GenerateResult } from '@/types/dialogue'
 import { callHFSpace, callHFSpaceDirect, wakeHFSpace } from '@/lib/hf-api'
 
-const LS = { script: 'da_script', locale: 'da_locale', mode: 'da_mode', result: 'da_result', podcast: 'da_podcast', episodes: 'da_episodes' }
+const LS = { locale: 'da_locale', mode: 'da_mode', result: 'da_result', podcast: 'da_podcast' }
 
 const DEFAULT_VOICES: VoicesConfig = {
   nl_BE: {
@@ -151,18 +151,14 @@ export default function Home() {
       const m = localStorage.getItem(LS.mode)
       const r = localStorage.getItem(LS.result)
       const p = localStorage.getItem(LS.podcast)
-      if (s) setScript(s)
       if (l) setLocale(l)
       if (m === 'dialogue' || m === 'podcast') setMode(m as 'dialogue' | 'podcast')
       if (r) setResult(JSON.parse(r))
       if (p) setPodcastResults(JSON.parse(p))
-      const e = localStorage.getItem(LS.episodes)
-      if (e) setPodcastEpisodes(JSON.parse(e))
     } catch {}
   }, [])
 
-  // ── Persist script, locale, mode ─────────────────────────────────────────────
-  useEffect(() => { try { localStorage.setItem(LS.script, script) } catch {} }, [script])
+  // ── Persist locale + mode (not script — fresh start on each load) ────────────
   useEffect(() => { try { localStorage.setItem(LS.locale, locale) } catch {} }, [locale])
   useEffect(() => { try { localStorage.setItem(LS.mode, mode) } catch {} }, [mode])
 
@@ -206,7 +202,6 @@ export default function Home() {
     setPodcastEpisodes(episodes)
     setActivePodcastTab(0)
     if (episodes.length === 1) setScript(episodes[0])
-    try { localStorage.setItem(LS.episodes, JSON.stringify(episodes)) } catch {}
   }
 
   const handleGeneratePodcast = async () => {
@@ -340,7 +335,6 @@ export default function Home() {
               const updated = [...podcastEpisodes]
               updated[activePodcastTab] = s
               setPodcastEpisodes(updated)
-              try { localStorage.setItem(LS.episodes, JSON.stringify(updated)) } catch {}
             }}
           />
         ) : (
