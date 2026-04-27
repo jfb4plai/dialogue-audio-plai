@@ -30,7 +30,6 @@ const DEFAULT_VOICES: VoicesConfig = {
     name: 'Français (Belgique)',
     voices: [
       { id: 'fr_FR-siwis-medium', label: 'Sylvie', gender: 'féminin' },
-      { id: 'fr_FR-upmc-pierre-medium', label: 'Pierre', gender: 'masculin' },
       { id: 'fr_FR-gilles-low', label: 'Gilles', gender: 'masculin' },
     ],
   },
