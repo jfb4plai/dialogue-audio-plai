@@ -5,6 +5,7 @@ interface Props {
   locale: string
   speakerCount: number
   onGenerated: (script: string) => void
+  onGeneratedEpisodes?: (episodes: string[]) => void
   mode: 'dialogue' | 'podcast'
 }
 
@@ -126,7 +127,7 @@ function DialogueGenerator({ locale, speakerCount, onGenerated }: Omit<Props, 'm
 
 // ── Podcast generator ─────────────────────────────────────────────────────────
 
-function PodcastGenerator({ locale, onGenerated }: Omit<Props, 'mode' | 'speakerCount'>) {
+function PodcastGenerator({ locale, onGenerated, onGeneratedEpisodes }: Omit<Props, 'mode' | 'speakerCount'>) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -171,7 +172,11 @@ function PodcastGenerator({ locale, onGenerated }: Omit<Props, 'mode' | 'speaker
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      onGenerated(data.script)
+      if (data.episodes && onGeneratedEpisodes) {
+        onGeneratedEpisodes(data.episodes)
+      } else {
+        onGenerated(data.script ?? data.episodes?.[0] ?? '')
+      }
       setOpen(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
@@ -179,6 +184,8 @@ function PodcastGenerator({ locale, onGenerated }: Omit<Props, 'mode' | 'speaker
       setLoading(false)
     }
   }
+
+  const episodeCount = Math.min(3, Math.ceil(nbRepliques / 50))
 
   return (
     <div className="mb-4 border border-orange-200 rounded-xl bg-orange-50">
@@ -221,7 +228,7 @@ function PodcastGenerator({ locale, onGenerated }: Omit<Props, 'mode' | 'speaker
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
               Répliques : <strong>{nbRepliques}</strong>
-              <span className="text-gray-400 ml-2 font-normal">(~{Math.round(nbRepliques * 7 / 60)} min audio estimées)</span>
+              <span className="text-gray-400 ml-2 font-normal">(~{Math.round(nbRepliques * 7 / 60)} min · {episodeCount > 1 ? `${episodeCount} épisodes` : '1 épisode'})</span>
             </label>
             <input type="range" min={20} max={150} step={5} value={nbRepliques} onChange={e => setNbRepliques(Number(e.target.value))} className="w-full" />
             <div className="flex justify-between text-xs text-gray-400"><span>20 (~2 min)</span><span className="text-orange-500">150 → 3 épisodes auto</span></div>
@@ -263,7 +270,9 @@ function PodcastGenerator({ locale, onGenerated }: Omit<Props, 'mode' | 'speaker
           </p>
 
           <button onClick={handleGenerate} disabled={loading || !sujet.trim()} className="w-full py-2 rounded-xl text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition">
-            {loading ? 'Génération en cours...' : '🎙️ Générer le script podcast'}
+            {loading
+              ? (episodeCount > 1 ? `Génération + résumés (${episodeCount} épisodes)...` : 'Génération en cours...')
+              : '🎙️ Générer le script podcast'}
           </button>
         </div>
       )}
@@ -273,9 +282,9 @@ function PodcastGenerator({ locale, onGenerated }: Omit<Props, 'mode' | 'speaker
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
-export default function ScriptGenerator({ locale, speakerCount, onGenerated, mode }: Props) {
+export default function ScriptGenerator({ locale, speakerCount, onGenerated, onGeneratedEpisodes, mode }: Props) {
   if (mode === 'podcast') {
-    return <PodcastGenerator locale={locale} onGenerated={onGenerated} />
+    return <PodcastGenerator locale={locale} onGenerated={onGenerated} onGeneratedEpisodes={onGeneratedEpisodes} />
   }
   return <DialogueGenerator locale={locale} speakerCount={speakerCount} onGenerated={onGenerated} />
 }

@@ -11,7 +11,7 @@ import ScriptGenerator from '@/components/ScriptGenerator'
 import { VoicesConfig, Speaker, GenerateResult } from '@/types/dialogue'
 import { callHFSpace, callHFSpaceDirect, wakeHFSpace } from '@/lib/hf-api'
 
-const LS = { script: 'da_script', locale: 'da_locale', mode: 'da_mode', result: 'da_result', podcast: 'da_podcast' }
+const LS = { script: 'da_script', locale: 'da_locale', mode: 'da_mode', result: 'da_result', podcast: 'da_podcast', episodes: 'da_episodes' }
 
 const DEFAULT_VOICES: VoicesConfig = {
   nl_BE: {
@@ -130,6 +130,8 @@ export default function Home() {
   const [silenceMs, setSilenceMs] = useState(500)
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [podcastResults, setPodcastResults] = useState<GenerateResult[]>([])
+  const [podcastEpisodes, setPodcastEpisodes] = useState<string[]>([])
+  const [activePodcastTab, setActivePodcastTab] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<'dialogue' | 'podcast'>('dialogue')
   const [podcastProgress, setPodcastProgress] = useState<string | null>(null)
@@ -154,6 +156,8 @@ export default function Home() {
       if (m === 'dialogue' || m === 'podcast') setMode(m as 'dialogue' | 'podcast')
       if (r) setResult(JSON.parse(r))
       if (p) setPodcastResults(JSON.parse(p))
+      const e = localStorage.getItem(LS.episodes)
+      if (e) setPodcastEpisodes(JSON.parse(e))
     } catch {}
   }, [])
 
@@ -198,6 +202,13 @@ export default function Home() {
     }
   }
 
+  const handleGeneratedEpisodes = (episodes: string[]) => {
+    setPodcastEpisodes(episodes)
+    setActivePodcastTab(0)
+    if (episodes.length === 1) setScript(episodes[0])
+    try { localStorage.setItem(LS.episodes, JSON.stringify(episodes)) } catch {}
+  }
+
   const handleGeneratePodcast = async () => {
     setError(null)
     setResult(null)
@@ -213,7 +224,8 @@ export default function Home() {
       return
     }
 
-    const episodes = splitPodcastScript(script, locale)
+    // Use pre-generated episodes if available, otherwise fall back to client-side split
+    const episodes = podcastEpisodes.length > 0 ? podcastEpisodes : splitPodcastScript(script, locale)
     const total = episodes.length
     const allResults: GenerateResult[] = []
     for (let i = 0; i < episodes.length; i++) {
@@ -296,8 +308,44 @@ export default function Home() {
           </div>
         )}
 
-        <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} mode={mode} />
-        <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
+        <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} onGeneratedEpisodes={handleGeneratedEpisodes} mode={mode} />
+
+        {/* Episode tabs (podcast mode with multiple episodes) */}
+        {mode === 'podcast' && podcastEpisodes.length > 1 && (
+          <div className="mb-3">
+            <div className="flex gap-1 mb-2 flex-wrap">
+              {podcastEpisodes.map((ep, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActivePodcastTab(i)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+                    activePodcastTab === i
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  Épisode {i + 1} ({ep.split('\n').filter(l => /^[A-B]:\s/.test(l)).length} répliques)
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {mode === 'podcast' && podcastEpisodes.length > 1 ? (
+          <ScriptEditor
+            script={podcastEpisodes[activePodcastTab]}
+            speakers={speakers}
+            targetLocale={locale}
+            onChange={(s) => {
+              const updated = [...podcastEpisodes]
+              updated[activePodcastTab] = s
+              setPodcastEpisodes(updated)
+              try { localStorage.setItem(LS.episodes, JSON.stringify(updated)) } catch {}
+            }}
+          />
+        ) : (
+          <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
+        )}
 
         <SilenceSlider value={silenceMs} onChange={setSilenceMs} />
 

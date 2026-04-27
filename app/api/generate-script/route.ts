@@ -51,29 +51,41 @@ export async function POST(req: NextRequest) {
       source_text = '',
     } = body
 
+    const episodeCount = Math.min(3, Math.ceil(nb_repliques / 50))
+    const repliquesPerEp = Math.round(nb_repliques / episodeCount)
+
     const sourceNote = source_text.trim()
       ? `\n\nSource de référence (extrait ou résumé — utilise ces informations pour enrichir le contenu) :\n"""\n${source_text.trim().slice(0, 3000)}\n"""`
       : ''
+
+    const episodeRule = episodeCount > 1
+      ? `2. Sépare les épisodes avec une ligne contenant UNIQUEMENT "[ÉPISODE 1]", "[ÉPISODE 2]"${episodeCount > 2 ? ', "[ÉPISODE 3]"' : ''} — rien d'autre sur cette ligne`
+      : `2. Pas de marqueurs d'épisodes`
 
     const systemPrompt = `Tu génères des scripts de podcast pédagogiques pour des enseignants.
 
 RÈGLES ABSOLUES DE FORMAT :
 1. Chaque réplique commence par "A: " ou "B: " (suivi d'un espace)
-2. ZÉRO markdown : pas de **, *, #, _, tirets de liste
-3. ZÉRO introduction, titre, commentaire ou conclusion
-4. ZÉRO numérotation de lignes
-5. Uniquement les répliques du podcast, rien d'autre
+${episodeRule}
+3. ZÉRO markdown : pas de **, *, #, _, tirets de liste
+4. ZÉRO introduction, titre, commentaire ou conclusion hors répliques
+5. ZÉRO numérotation de lignes
 
-DYNAMIQUE PODCAST :
+${episodeCount > 1 ? `DÉCOUPAGE EN ${episodeCount} ÉPISODES DE ~${repliquesPerEp} RÉPLIQUES :
+- Place les marqueurs [ÉPISODE N] à des moments narratifs naturels (fin de sous-thème, conclusion partielle)
+- Ne coupe jamais au milieu d'un argument ou d'une explication
+- Chaque épisode doit avoir une cohérence interne
+
+` : ''}DYNAMIQUE PODCAST :
 - A (${role_a}) : mène le débat, pose les questions, relance, challenge, vulgarise
 - B (${role_b}) : répond avec expertise, apporte des exemples concrets, nuance
 - Les répliques sont naturelles, vivantes, parfois courtes, parfois plus développées
 - A et B interagissent vraiment (rebonds, reformulations, désaccords constructifs)
 
 EXEMPLE DE FORMAT CORRECT :
-A: Alors, commençons directement. Qu'est-ce qui vous a amené à vous intéresser à ce sujet ?
+${episodeCount > 1 ? '[ÉPISODE 1]\n' : ''}A: Alors, commençons directement. Qu'est-ce qui vous a amené à vous intéresser à ce sujet ?
 B: C'est une bonne question. En réalité, tout a commencé il y a quelques années quand...
-A: Attendez, vous voulez dire que...`
+${episodeCount > 1 ? '[ÉPISODE 2]\nA: Dans cette deuxième partie, ...' : 'A: Attendez, vous voulez dire que...'}`
 
     const userPrompt = `Génère un podcast en ${langue}.
 
@@ -81,9 +93,9 @@ Paramètres :
 - A = ${role_a}
 - B = ${role_b}
 - Sujet : ${sujet || 'conversation générale'}
-- Nombre de répliques : ${nb_repliques}${sourceNote}
+- Nombre total de répliques : ${nb_repliques}${episodeCount > 1 ? ` → ${episodeCount} épisodes de ~${repliquesPerEp} répliques` : ''}${sourceNote}
 
-Génère maintenant le podcast. Format strict : une réplique par ligne, préfixe A: ou B: uniquement.`
+Génère maintenant le podcast. Format strict : répliques A:/B: uniquement${episodeCount > 1 ? ', avec marqueurs [ÉPISODE N]' : ''}.`
 
     try {
       const message = await client.messages.create({
@@ -93,13 +105,39 @@ Génère maintenant le podcast. Format strict : une réplique par ligne, préfix
         system: systemPrompt,
       })
       const raw = message.content[0].type === 'text' ? message.content[0].text : ''
-      const clean = raw.split('\n')
-        .map(l => l.trim())
-        .filter(l => /^[A-B]:\s/.test(l))
+
+      // Parse: keep répliques lines + episode markers
+      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean)
+      const kept = lines.filter(l => /^[A-B]:\s/.test(l) || /^\[ÉPISODE \d+\]$/.test(l))
         .map(l => l.replace(/\*\*/g, '').replace(/\*/g, '').replace(/_/g, ''))
-        .join('\n')
-      if (!clean) return NextResponse.json({ error: 'Format invalide. Réessayez.' }, { status: 500 })
-      return NextResponse.json({ script: clean })
+
+      if (!kept.length) return NextResponse.json({ error: 'Format invalide. Réessayez.' }, { status: 500 })
+
+      // Split into episodes by markers
+      const fullText = kept.join('\n')
+      const rawParts = fullText.split(/\[ÉPISODE \d+\]\n?/).map(s => s.trim()).filter(Boolean)
+      const episodes: string[] = rawParts.length >= 2 ? rawParts : [fullText]
+
+      // ── Generate summaries for episodes 2+ (call D) ────────────────────────
+      for (let i = 1; i < episodes.length; i++) {
+        try {
+          const prevSnippet = episodes[i - 1].slice(0, 2000)
+          const summaryMsg = await client.messages.create({
+            model: 'claude-haiku-4-5',
+            max_tokens: 200,
+            messages: [{
+              role: 'user',
+              content: `Voici le contenu de l'épisode ${i} d'un podcast en ${langue} :\n\n${prevSnippet}\n\nGénère en ${langue} une réplique orale et naturelle (2-3 phrases max) qu'un animateur de podcast dirait au début de l'épisode ${i + 1} pour rappeler brièvement les points clés abordés dans l'épisode précédent. Style vivant, pas académique. Réponds uniquement avec la phrase, sans guillemets ni préfixe.`,
+            }],
+          })
+          const summary = summaryMsg.content[0].type === 'text'
+            ? summaryMsg.content[0].text.trim().replace(/\*\*/g, '').replace(/\*/g, '')
+            : ''
+          if (summary) episodes[i] = `A: ${summary}\n` + episodes[i]
+        } catch { /* best-effort */ }
+      }
+
+      return NextResponse.json({ episodes })
     } catch (err) {
       return NextResponse.json({ error: err instanceof Error ? err.message : 'Erreur' }, { status: 500 })
     }
