@@ -67,8 +67,16 @@ export async function callHFSpaceDirect({
   })
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Erreur serveur TTS' }))
-    throw new Error(err.error || 'Erreur de génération podcast')
+    const body = await res.text().catch(() => '')
+    let errMsg = `HTTP ${res.status}`
+    try {
+      const j = JSON.parse(body)
+      const detail = j.error || j.detail
+      errMsg += ': ' + (typeof detail === 'string' ? detail : JSON.stringify(detail))
+    } catch {
+      if (body) errMsg += ': ' + body.slice(0, 200)
+    }
+    throw new Error(errMsg)
   }
   return res.json()
 }
