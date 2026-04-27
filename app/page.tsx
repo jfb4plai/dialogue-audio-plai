@@ -36,6 +36,58 @@ const DEFAULT_VOICES: VoicesConfig = {
   },
 }
 
+// ── Podcast multi-episode split ──────────────────────────────────────────────
+
+const EPISODE_CONNECTORS: Record<string, { closing: string; opening: string }> = {
+  nl_BE: {
+    closing: 'Tot hier voor vandaag. In het volgende deel gaan we verder met dit onderwerp. Tot binnenkort!',
+    opening: 'Welkom terug bij onze podcast. We vervolgen ons gesprek waar we gebleven waren.',
+  },
+  nl_NL: {
+    closing: 'Tot hier voor vandaag. In de volgende aflevering gaan we verder. Tot ziens!',
+    opening: 'Welkom terug. We gaan verder waar we gebleven waren.',
+  },
+  fr_FR: {
+    closing: "C'est tout pour cet épisode. Suite au prochain ! À très bientôt.",
+    opening: "Bienvenue dans la suite de notre podcast. Reprenons là où nous nous étions arrêtés.",
+  },
+  fr_BE: {
+    closing: "C'est tout pour cet épisode. La suite au prochain ! À très bientôt.",
+    opening: "Bienvenue dans la suite. Reprenons là où nous nous étions arrêtés.",
+  },
+  de_DE: {
+    closing: 'Das war es für heute. Im nächsten Teil geht es weiter. Bis bald!',
+    opening: 'Willkommen zurück. Setzen wir unser Gespräch dort fort, wo wir aufgehört haben.',
+  },
+  en_GB: {
+    closing: "That's all for today. We'll continue in our next episode. See you soon!",
+    opening: "Welcome back to our podcast. Let's pick up where we left off.",
+  },
+  es_ES: {
+    closing: '¡Hasta aquí el episodio de hoy! Continuaremos en el próximo. ¡Hasta pronto!',
+    opening: 'Bienvenido de vuelta. Continuemos donde lo dejamos.',
+  },
+}
+
+function splitPodcastScript(script: string, locale: string, maxPerEpisode = 50): string[] {
+  const lines = script.split('\n').filter(l => /^[A-B]:\s/.test(l.trim()))
+  if (lines.length <= maxPerEpisode) return [script]
+  const conn = EPISODE_CONNECTORS[locale] ?? EPISODE_CONNECTORS['fr_FR']
+  const episodes: string[] = []
+  let i = 0
+  while (i < lines.length) {
+    const chunk = lines.slice(i, i + maxPerEpisode)
+    const isLast = i + maxPerEpisode >= lines.length
+    const isFirst = i === 0
+    let episodeLines = [...chunk]
+    if (!isLast) episodeLines.push(`A: ${conn.closing}`)
+    if (!isFirst) episodeLines = [`A: ${conn.opening}`, ...episodeLines]
+    episodes.push(episodeLines.join('\n'))
+    i += maxPerEpisode
+  }
+  return episodes
+}
+
 function HelpBanner() {
   const [open, setOpen] = useState(false)
   return (
@@ -50,7 +102,7 @@ function HelpBanner() {
       {open && (
         <div className="px-4 pb-4 text-amber-900 space-y-2 text-xs leading-relaxed">
           <p><strong>💬 Mode Dialogue / Monologue :</strong> Génère un échange entre 2 à 4 locuteurs (A, B, C, D) ou un monologue (A seul). Idéal pour des exercices de compréhension orale en classe de langue.</p>
-          <p><strong>🎙️ Mode Podcast :</strong> Génère un podcast entre une animatrice (A) et un(e) expert(e) (B) dans la langue cible. Tu peux fournir un texte source (article, document) comme base de contenu. La génération audio peut prendre <strong>1 à 3 minutes</strong> pour un podcast de 8-12 minutes. Le script est éditable avant de lancer l&apos;audio. <strong>Max 80 répliques (~9 min audio).</strong></p>
+          <p><strong>🎙️ Mode Podcast :</strong> Génère un podcast entre une animatrice (A) et un(e) expert(e) (B) dans la langue cible. Tu peux fournir un texte source (article, document) comme base de contenu. La génération audio peut prendre <strong>1 à 3 min par épisode</strong>. Le script est éditable avant de lancer l&apos;audio. <strong>Scripts &gt; 50 répliques → découpés automatiquement en épisodes de 50 max (jusqu&apos;à 3 épisodes). Chaque épisode inclut une phrase de clôture et une phrase d&apos;intro au suivant.</strong></p>
           <p><strong>✨ Générer le script avec l&apos;IA :</strong> Ouvre le panneau coloré en étape 3, remplis le niveau, le domaine, le sujet et le nombre de répliques. Le script est généré directement dans la langue cible. <strong>Max 10 générations/heure.</strong></p>
           <p><strong>Traduction :</strong> Écris le script en français, sélectionne la langue cible (étape 1), puis clique &quot;Traduire&quot;. Utilise DeepL (haute qualité). Vérifie toujours la traduction avant de générer. <strong>⚠ L&apos;option traduction ne sera disponible que dans la limite du crédit disponible. Si vous arrivez à dépasser la limite, contactez le Pôle.</strong></p>
           <p><strong>Format du script :</strong> <strong className="text-red-700">Chaque phrase doit commencer par une lettre majuscule suivie de deux-points.</strong> Les lignes sans préfixe sont ignorées. Rafraîchis la page pour réinitialiser le script.<br />
@@ -76,6 +128,7 @@ export default function Home() {
   const [script, setScript] = useState('A: Goedemorgen!\nB: Goedemorgen! Hoe gaat het?\nA: Het gaat goed, dank je.')
   const [silenceMs, setSilenceMs] = useState(500)
   const [result, setResult] = useState<GenerateResult | null>(null)
+  const [podcastResults, setPodcastResults] = useState<GenerateResult[]>([])
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<'dialogue' | 'podcast'>('dialogue')
   const [podcastProgress, setPodcastProgress] = useState<string | null>(null)
@@ -123,19 +176,35 @@ export default function Home() {
   const handleGeneratePodcast = async () => {
     setError(null)
     setResult(null)
-    setPodcastProgress('Connexion au serveur TTS...')
-    try {
-      const res = await callHFSpaceDirect({
-        script, speakers, silence_ms: silenceMs,
-        item_title: `Podcast ${locale}`,
-        onProgress: msg => setPodcastProgress(msg),
-      })
-      setResult(res)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erreur inconnue')
-    } finally {
-      setPodcastProgress(null)
+    setPodcastResults([])
+    const episodes = splitPodcastScript(script, locale)
+    const total = episodes.length
+    const allResults: GenerateResult[] = []
+    for (let i = 0; i < episodes.length; i++) {
+      setPodcastProgress(total > 1
+        ? `Épisode ${i + 1}/${total} — connexion au serveur TTS...`
+        : 'Connexion au serveur TTS...')
+      try {
+        const res = await callHFSpaceDirect({
+          script: episodes[i],
+          speakers,
+          silence_ms: silenceMs,
+          item_title: total > 1
+            ? `Podcast ${locale} Ep${i + 1}/${total}`
+            : `Podcast ${locale}`,
+          onProgress: msg => setPodcastProgress(
+            total > 1 ? `Épisode ${i + 1}/${total} — ${msg}` : msg
+          ),
+        })
+        allResults.push(res)
+      } catch (e: unknown) {
+        setError(`Erreur épisode ${i + 1}/${total} : ${e instanceof Error ? e.message : 'Erreur inconnue'}`)
+        break
+      }
     }
+    setPodcastProgress(null)
+    if (allResults.length === 1) setResult(allResults[0])
+    else if (allResults.length > 1) setPodcastResults(allResults)
   }
 
   const availableVoices = voices[locale]?.voices ?? []
@@ -182,7 +251,7 @@ export default function Home() {
 
         {mode === 'podcast' && (
           <div className="mb-3 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
-            <strong>Mode Podcast</strong> — 2 locuteurs fixes (A = animateur/trice, B = expert·e). La génération audio se connecte directement au serveur TTS, sans limite de temps Vercel.
+            <strong>Mode Podcast</strong> — 2 locuteurs fixes (A = animateur/trice, B = expert·e). Connexion directe au serveur TTS. <strong>Scripts &gt; 50 répliques → découpés automatiquement en épisodes.</strong>
           </div>
         )}
 
@@ -222,7 +291,20 @@ export default function Home() {
         )}
       </div>
 
-      {result && <AudioResult result={result} />}
+      {podcastResults.length > 0 && (
+        <div className="mt-6 space-y-6">
+          {podcastResults.map((r, i) => (
+            <div key={i}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-semibold text-orange-700">🎙️ Épisode {i + 1}/{podcastResults.length}</span>
+                <span className="text-xs text-gray-400">— {r.duration_seconds}s</span>
+              </div>
+              <AudioResult result={r} />
+            </div>
+          ))}
+        </div>
+      )}
+      {result && podcastResults.length === 0 && <AudioResult result={result} />}
       <HistoryPanel />
 
       {/* Ancrage scientifique */}

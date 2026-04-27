@@ -223,8 +223,8 @@ function PodcastGenerator({ locale, onGenerated }: Omit<Props, 'mode' | 'speaker
               Répliques : <strong>{nbRepliques}</strong>
               <span className="text-gray-400 ml-2 font-normal">(~{Math.round(nbRepliques * 7 / 60)} min audio estimées)</span>
             </label>
-            <input type="range" min={20} max={80} step={4} value={nbRepliques} onChange={e => setNbRepliques(Number(e.target.value))} className="w-full" />
-            <div className="flex justify-between text-xs text-gray-400"><span>20 (~2 min)</span><span>80 (~9 min)</span></div>
+            <input type="range" min={20} max={150} step={5} value={nbRepliques} onChange={e => setNbRepliques(Number(e.target.value))} className="w-full" />
+            <div className="flex justify-between text-xs text-gray-400"><span>20 (~2 min)</span><span className="text-orange-500">150 → 3 épisodes auto</span></div>
           </div>
 
           {/* Source optionnelle */}
@@ -259,7 +259,7 @@ function PodcastGenerator({ locale, onGenerated }: Omit<Props, 'mode' | 'speaker
             🎙️ Mode Podcast · A = {roleA || 'Animateur/trice'} · B = {roleB || 'Expert(e)'} · Génération directe en {LOCALE_NAMES[locale] ?? locale} · Max 10/heure
           </p>
           <p className="text-xs text-orange-700 bg-orange-100 rounded px-3 py-2">
-            ⏱ La génération audio d&apos;un podcast peut prendre <strong>1 à 3 minutes</strong>. Le script reste éditable avant de lancer l&apos;audio.
+            ⏱ La génération audio prend <strong>1 à 3 min par épisode</strong>. Script &gt; 50 répliques → découpé automatiquement en épisodes (50 max/épisode). Le script reste éditable avant de lancer l&apos;audio.
           </p>
 
           <button onClick={handleGenerate} disabled={loading || !sujet.trim()} className="w-full py-2 rounded-xl text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition">
