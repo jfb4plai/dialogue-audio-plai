@@ -70,6 +70,7 @@ ${episodeRule}
 3. ZÉRO markdown : pas de **, *, #, _, tirets de liste
 4. ZÉRO introduction, titre, commentaire ou conclusion hors répliques
 5. ZÉRO numérotation de lignes
+6. LANGUE STRICTE : TOUT le texte doit être en ${langue} — aucun mot, aucune expression dans une autre langue. Même les mots d'usage courant (ok, bye, etc.) doivent être traduits ou remplacés.
 
 ${episodeCount > 1 ? `DÉCOUPAGE EN ${episodeCount} ÉPISODES DE ~${repliquesPerEp} RÉPLIQUES :
 - Place les marqueurs [ÉPISODE N] à des moments narratifs naturels (fin de sous-thème, conclusion partielle)
@@ -164,6 +165,7 @@ RÈGLES ABSOLUES DE FORMAT :
 4. ZÉRO introduction, titre, commentaire ou conclusion
 5. ZÉRO numérotation de lignes
 6. Uniquement les répliques du dialogue, rien d'autre
+7. LANGUE STRICTE : TOUT le texte doit être en ${langue} — aucun mot dans une autre langue.
 
 EXEMPLE DE FORMAT CORRECT :
 A: Goedemorgen, kan ik u helpen?
