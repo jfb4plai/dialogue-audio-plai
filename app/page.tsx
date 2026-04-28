@@ -21,11 +21,17 @@ const DEFAULT_VOICES: VoicesConfig = {
       { id: 'nl_BE-rdh-medium', label: 'Rdh', gender: 'masculin' },
     ],
   },
-  es_ES: {
-    name: 'Espagnol',
+  nl_NL: {
+    name: 'Néerlandais (NL)',
     voices: [
-      { id: 'es_ES-carlfm-x_low', label: 'Carlos', gender: 'masculin' },
-      { id: 'es_MX-ald-medium', label: 'Aldo', gender: 'masculin' },
+      { id: 'nl_NL-mls-medium', label: 'Mls', gender: 'féminin' },
+    ],
+  },
+  fr_FR: {
+    name: 'Français',
+    voices: [
+      { id: 'fr_FR-siwis-medium', label: 'Siwis', gender: 'féminin' },
+      { id: 'fr_FR-gilles-low', label: 'Gilles', gender: 'masculin' },
     ],
   },
   fr_BE: {
@@ -33,6 +39,27 @@ const DEFAULT_VOICES: VoicesConfig = {
     voices: [
       { id: 'fr_FR-siwis-medium', label: 'Sylvie', gender: 'féminin' },
       { id: 'fr_FR-gilles-low', label: 'Gilles', gender: 'masculin' },
+    ],
+  },
+  de_DE: {
+    name: 'Allemand',
+    voices: [
+      { id: 'de_DE-thorsten-medium', label: 'Thorsten', gender: 'masculin' },
+      { id: 'de_DE-eva_k-x_low', label: 'Eva', gender: 'féminin' },
+    ],
+  },
+  en_GB: {
+    name: 'Anglais (UK)',
+    voices: [
+      { id: 'en_GB-alan-medium', label: 'Alan', gender: 'masculin' },
+      { id: 'en_GB-jenny_dioco-medium', label: 'Jenny', gender: 'féminin' },
+    ],
+  },
+  es_ES: {
+    name: 'Espagnol',
+    voices: [
+      { id: 'es_ES-carlfm-x_low', label: 'Carlos', gender: 'masculin' },
+      { id: 'es_MX-ald-medium', label: 'Aldo', gender: 'masculin' },
     ],
   },
 }
