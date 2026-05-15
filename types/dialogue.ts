@@ -2,12 +2,14 @@ export interface Speaker {
   label: string
   voice: string
   color: string
+  length_scale?: number
 }
 
 export interface VoiceInfo {
   id: string
   label: string
   gender: string
+  length_scale?: number
 }
 
 export interface LanguageConfig {

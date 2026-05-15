@@ -137,8 +137,12 @@ export default function Home() {
     setResult(null)
     try { localStorage.removeItem(LS.result) } catch {}
     try {
+      const enrichedSpeakers = speakers.map(sp => {
+        const voiceInfo = availableVoices.find(v => v.id === sp.voice)
+        return { ...sp, length_scale: voiceInfo?.length_scale ?? 1.0 }
+      })
       const res = await callHFSpace({
-        script, speakers, silence_ms: silenceMs,
+        script, speakers: enrichedSpeakers, silence_ms: silenceMs,
         item_title: `Dialogue ${locale}`,
       })
       setResult(res)
