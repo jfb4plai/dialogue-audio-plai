@@ -19,12 +19,15 @@ const DEFAULT_VOICES: VoicesConfig = {
     voices: [
       { id: 'nl_BE-nathalie-medium', label: 'Nathalie', gender: 'féminin' },
       { id: 'nl_BE-rdh-medium', label: 'Rdh', gender: 'masculin' },
+      { id: 'nl_NL-mls-medium', label: 'Mls (NL)', gender: 'neutre', length_scale: 1.25 },
+      { id: 'nl_NL-mls_7432-low', label: 'Lars (NL)', gender: 'neutre', length_scale: 1.7 },
     ],
   },
   nl_NL: {
-    name: 'Néerlandais (NL)',
+    name: 'Néerlandais (Pays-Bas)',
     voices: [
-      { id: 'nl_NL-mls-medium', label: 'Mls', gender: 'féminin' },
+      { id: 'nl_NL-mls-medium', label: 'Mls', gender: 'neutre', length_scale: 1.25 },
+      { id: 'nl_NL-mls_7432-low', label: 'Lars', gender: 'neutre', length_scale: 1.7 },
     ],
   },
   fr_FR: {
