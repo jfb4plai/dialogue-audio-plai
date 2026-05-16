@@ -183,6 +183,9 @@ export default function Home() {
         <SilenceSlider value={silenceMs} onChange={setSilenceMs} />
 
         <div className="mb-3 text-xs font-semibold text-blue-600 uppercase tracking-wide">Étape 4 — Générer</div>
+        <div className="mb-3 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 leading-relaxed">
+          L&apos;audio généré est hébergé publiquement sur Internet Archive. Ne pas inclure de données personnelles (noms d&apos;élèves, informations privées) dans le script.
+        </div>
         <GenerateButton onGenerate={handleGenerate} disabled={!canGenerate} />
 
         {error && (
