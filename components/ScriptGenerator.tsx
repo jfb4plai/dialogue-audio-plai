@@ -28,7 +28,7 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated }: P
   const [nbRepliques, setNbRepliques] = useState(20)
   const [registre, setRegistre] = useState('mixte')
   const [vocabulaire, setVocabulaire] = useState('')
-  const [typeDialogue, setTypeDialogue] = useState(speakerCount > 1 ? 'dialogue' : 'monologue')
+  const typeDialogue = speakerCount === 1 ? 'monologue' : 'dialogue'
 
   const handleGenerate = async () => {
     setLoading(true)
@@ -37,7 +37,7 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated }: P
       const res = await fetch('/api/generate-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale, niveau, filiere, contexte, sujet, nb_repliques: nbRepliques, registre, vocabulaire, type_dialogue: typeDialogue }),
+        body: JSON.stringify({ locale, niveau, filiere, contexte, sujet, nb_repliques: nbRepliques, registre, vocabulaire, type_dialogue: typeDialogue, nb_locuteurs: speakerCount }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -64,13 +64,10 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated }: P
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
-            <div className="flex gap-3 text-sm">
-              {['dialogue', 'monologue'].map(t => (
-                <label key={t} className="flex items-center gap-1 cursor-pointer">
-                  <input type="radio" name="type" value={t} checked={typeDialogue === t} onChange={() => setTypeDialogue(t)} />
-                  {t === 'dialogue' ? 'Dialogue (A + B)' : 'Monologue (A seul)'}
-                </label>
-              ))}
+            <div className="text-sm text-gray-800 bg-white border border-gray-200 rounded-lg px-3 py-2">
+              {speakerCount === 1
+                ? 'Monologue (A seul)'
+                : `Dialogue — ${speakerCount} locuteurs (${['A','B','C','D'].slice(0, speakerCount).join(', ')})`}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { locale = 'nl_BE', type_dialogue = 'dialogue' } = body
+  const { locale = 'nl_BE', type_dialogue = 'dialogue', nb_locuteurs = 2 } = body
   const langue = LOCALE_LABELS[locale] ?? locale
 
   // ── Dialogue / Monologue mode ─────────────────────────────────────────────
@@ -51,12 +51,15 @@ export async function POST(req: NextRequest) {
   const niveauNote = niveau.trim() ? `\n- Niveau : ${niveau.trim()}` : ''
   const filiereNote = filiere.trim() ? `\n- Filière / domaine : ${filiere.trim()}` : ''
   const contexteNote = contexte.trim() ? `\n- Contexte situationnel : ${contexte.trim()}` : ''
-  const locuteurs = type_dialogue === 'monologue' ? 'A uniquement (un seul locuteur)' : 'A et B (deux locuteurs alternés)'
+  const letters = ['A', 'B', 'C', 'D'].slice(0, Math.max(1, nb_locuteurs))
+  const locuteurs = type_dialogue === 'monologue'
+    ? 'A uniquement (monologue)'
+    : `${letters.join(', ')} (${nb_locuteurs} locuteurs alternés)`
 
   const systemPrompt = `Tu génères des scripts de dialogue pédagogiques pour des enseignants de la Fédération Wallonie-Bruxelles.
 
 RÈGLES ABSOLUES DE FORMAT :
-1. Chaque réplique commence par "A: " ou "B: " (suivi d'un espace)
+1. Chaque réplique commence par une lettre majuscule suivie de ": " — lettres utilisées : ${letters.join(', ')}
 2. Pour un monologue, utilise uniquement "A: "
 3. ZÉRO markdown : pas de **, *, #, _, tirets de liste
 4. ZÉRO introduction, titre, commentaire ou conclusion
@@ -77,7 +80,7 @@ Paramètres :
 - Sujet : ${sujet || 'conversation courante'}
 - Registre : ${registre}${niveauNote}${filiereNote}${contexteNote}${vocNote}
 
-Génère maintenant le dialogue. Format strict : une réplique par ligne, préfixe A: ou B: uniquement.`
+Génère maintenant le dialogue. Format strict : une réplique par ligne, préfixe ${letters.join(': ou ')+': uniquement'}. Tous les locuteurs (${letters.join(', ')}) doivent intervenir de façon équilibrée.`
 
   try {
     const message = await client.messages.create({
