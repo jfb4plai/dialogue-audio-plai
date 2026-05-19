@@ -90,16 +90,16 @@ const DEFAULT_VOICES: VoicesConfig = {
 function HelpBanner() {
   const [open, setOpen] = useState(false)
   return (
-    <div className="mb-4 border border-amber-200 rounded-xl bg-amber-50 text-sm">
+    <div className="mb-4 border border-jfb-bordure bg-jfb-beige text-sm" style={{ borderRadius: '2px', borderLeft: '3px solid #FF3399' }}>
       <button
-        className="w-full flex justify-between items-center px-4 py-3 text-amber-800 font-medium"
+        className="w-full flex justify-between items-center px-4 py-3 text-jfb-noir font-medium"
         onClick={() => setOpen(o => !o)}
       >
         <span>Mode d&apos;emploi &amp; limites</span>
         <span>{open ? '▲' : '▼'}</span>
       </button>
       {open && (
-        <div className="px-4 pb-4 text-amber-900 space-y-2 text-xs leading-relaxed">
+        <div className="px-4 pb-4 text-jfb-gris space-y-2 text-xs leading-relaxed">
           <p><strong>Dialogue / Monologue :</strong> Génère un échange entre 2 à 4 locuteurs (A, B, C, D) ou un monologue (A seul). Idéal pour des exercices de compréhension orale en classe de langue.</p>
           <p><strong>Générer le script avec l&apos;IA :</strong> Ouvre le panneau violet en étape 3, remplis le niveau, le domaine, le sujet et le nombre de répliques. Le script est généré directement dans la langue cible. <strong>Max 10 générations/heure.</strong></p>
           <p><strong>Traduction :</strong> Écris le script en français, sélectionne la langue cible (étape 1), puis clique &quot;Traduire&quot;. Utilise DeepL (haute qualité). Vérifie toujours la traduction avant de générer. <strong>Disponible dans la limite du crédit DeepL — contacte le Pôle si la limite est atteinte.</strong></p>
@@ -205,32 +205,32 @@ export default function Home() {
 
       <HelpBanner />
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <div className="mb-2 text-xs font-semibold text-blue-600 uppercase tracking-wide">Étape 1 — Langue</div>
+      <div className="bg-white border border-jfb-bordure p-6" style={{ borderRadius: '2px' }}>
+        <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 1 — Langue</div>
         <LanguageSelector voices={voices} selected={locale} onChange={setLocale} />
 
-        <div className="mb-2 text-xs font-semibold text-blue-600 uppercase tracking-wide">Étape 2 — Locuteurs</div>
+        <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 2 — Locuteurs</div>
         <SpeakerConfig speakers={speakers} availableVoices={availableVoices} onChange={setSpeakers} />
         {hasAzureVoice && azureConfigured === false && (
-          <div className="mt-2 mb-1 text-xs bg-amber-50 border border-amber-300 text-amber-800 rounded-lg px-3 py-2">
+          <div className="mt-2 mb-1 text-xs bg-jfb-beige border border-jfb-beige-dk text-jfb-gris px-3 py-2" style={{ borderRadius: '2px', borderLeft: '3px solid #FF3399' }}>
             Une ou plusieurs voix sélectionnées nécessitent Azure TTS (non configuré). La génération échouera pour ces locuteurs. Contactez le Pôle PLAI pour activer les voix néerlandaises (NL).
           </div>
         )}
 
-        <div className="mb-2 text-xs font-semibold text-blue-600 uppercase tracking-wide">Étape 3 — Script</div>
+        <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 3 — Script</div>
         <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} />
         <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
 
         <SilenceSlider value={silenceMs} onChange={setSilenceMs} />
 
-        <div className="mb-3 text-xs font-semibold text-blue-600 uppercase tracking-wide">Étape 4 — Générer</div>
-        <div className="mb-3 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 leading-relaxed">
+        <div className="mb-3 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 4 — Générer</div>
+        <div className="mb-3 text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2 leading-relaxed" style={{ borderRadius: '2px' }}>
           L&apos;audio généré est hébergé publiquement sur Internet Archive. Ne pas inclure de données personnelles (noms d&apos;élèves, informations privées) dans le script.
         </div>
         <GenerateButton onGenerate={handleGenerate} disabled={!canGenerate} />
 
         {error && (
-          <div className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          <div className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2" style={{ borderRadius: '2px' }}>
             {error}
           </div>
         )}
@@ -239,30 +239,30 @@ export default function Home() {
       {result && <AudioResult result={result} />}
       <HistoryPanel />
 
-      <div className="mt-8 border border-blue-100 rounded-2xl bg-blue-50 p-5">
-        <h2 className="text-sm font-bold text-blue-800 mb-1">Ancrage scientifique</h2>
-        <p className="text-xs text-blue-700 mb-3">
+      <div className="mt-8 border border-jfb-bordure bg-jfb-beige p-5" style={{ borderRadius: '2px', borderLeft: '3px solid #FF3399' }}>
+        <h2 className="text-sm font-bold text-jfb-noir mb-1">Ancrage scientifique</h2>
+        <p className="text-xs text-jfb-gris mb-3">
           Deux axes documentés dans le corpus RISS (522 627 articles scientifiques francophones) :
           l&apos;efficacité des dialogues audio pour l&apos;acquisition en LVE, et l&apos;importance de
           contextualiser l&apos;apprentissage dans le domaine professionnel pour donner du sens et motiver.
         </p>
-        <p className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">Axe 1 — Dialogues audio et acquisition en LVE</p>
-        <ul className="space-y-2 text-xs text-blue-900 mb-4">
-          <li><strong>Écoute-acquisition</strong> — L&apos;écoute orientée vers la production favorise l&apos;ancrage lexical et phonologique, au-delà de la simple écoute-compréhension.<span className="block text-blue-500 mt-0.5">Évrard, 2017 · RISS dumas-01760327</span></li>
-          <li><strong>Familiarisation phonologique</strong> — Exposer l&apos;oreille à des sonorités et rythmes nouveaux est une priorité de l&apos;enseignement des LVE.<span className="block text-blue-500 mt-0.5">Bazelaire, 2012 · RISS dumas-00765301</span></li>
-          <li><strong>Document sonore en classe</strong> — Les activités de pré- et post-écoute autour d&apos;un document sonore structurent les transactions didactiques en classe de langue.<span className="block text-blue-500 mt-0.5">Forest &amp; Gruson, 2011 · RISS hal-04050423</span></li>
-          <li><strong>Prosodie et compréhension L2</strong> — L&apos;entraînement répété à l&apos;écoute de dialogues structurés réduit les obstacles prosodiques en L2.<span className="block text-blue-500 mt-0.5">Bidenti, 2024 · RISS dumas-04828505</span></li>
-          <li><strong>Acquisition lexicale</strong> — Une exposition sonore structurée et répétée améliore l&apos;acquisition du lexique en L2.<span className="block text-blue-500 mt-0.5">Jouannaud, 2021 · RISS tel-03235381</span></li>
+        <p className="text-xs font-semibold text-jfb-rose mb-1 uppercase tracking-[0.12em]">Axe 1 — Dialogues audio et acquisition en LVE</p>
+        <ul className="space-y-2 text-xs text-jfb-noir mb-4">
+          <li><strong>Écoute-acquisition</strong> — L&apos;écoute orientée vers la production favorise l&apos;ancrage lexical et phonologique, au-delà de la simple écoute-compréhension.<span className="block text-jfb-gris-cl mt-0.5">Évrard, 2017 · RISS dumas-01760327</span></li>
+          <li><strong>Familiarisation phonologique</strong> — Exposer l&apos;oreille à des sonorités et rythmes nouveaux est une priorité de l&apos;enseignement des LVE.<span className="block text-jfb-gris-cl mt-0.5">Bazelaire, 2012 · RISS dumas-00765301</span></li>
+          <li><strong>Document sonore en classe</strong> — Les activités de pré- et post-écoute autour d&apos;un document sonore structurent les transactions didactiques en classe de langue.<span className="block text-jfb-gris-cl mt-0.5">Forest &amp; Gruson, 2011 · RISS hal-04050423</span></li>
+          <li><strong>Prosodie et compréhension L2</strong> — L&apos;entraînement répété à l&apos;écoute de dialogues structurés réduit les obstacles prosodiques en L2.<span className="block text-jfb-gris-cl mt-0.5">Bidenti, 2024 · RISS dumas-04828505</span></li>
+          <li><strong>Acquisition lexicale</strong> — Une exposition sonore structurée et répétée améliore l&apos;acquisition du lexique en L2.<span className="block text-jfb-gris-cl mt-0.5">Jouannaud, 2021 · RISS tel-03235381</span></li>
         </ul>
-        <p className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">Axe 2 — Contextualisation et motivation en filière professionnelle</p>
-        <ul className="space-y-2 text-xs text-blue-900">
-          <li><strong>Contextualisation en lycée professionnel</strong> — Ancrer les apprentissages dans la filière métier est un moyen efficient de mobiliser les apprenants.<span className="block text-blue-500 mt-0.5">Payet, 2022 · RISS dumas-03984644</span></li>
-          <li><strong>Langue sur objectifs spécifiques</strong> — L&apos;ancrage dans le domaine professionnel réel rend le curriculum plus opérationnel et l&apos;apprentissage plus signifiant.<span className="block text-blue-500 mt-0.5">Sowa, 2022 · RISS W4225401879</span></li>
-          <li><strong>Motivation intrinsèque</strong> — L&apos;intérêt attribué à une tâche et son ancrage situationnel sont des leviers directs de motivation intrinsèque en LVE.<span className="block text-blue-500 mt-0.5">Desaivres &amp; Davoli, 2025 · RISS dumas-05216415</span></li>
-          <li><strong>Productions concrètes et engagement</strong> — La dimension contextualisée des productions est un levier de motivation spécifique aux élèves de lycée professionnel.<span className="block text-blue-500 mt-0.5">Eucat, Khadraoui &amp; Dahman, 2023 · RISS dumas-04676095</span></li>
-          <li><strong>Dimension professionnelle en cours de langue</strong> — Intégrer le contexte métier dans un cours de LVE a un effet positif sur l&apos;engagement et la valorisation des compétences.<span className="block text-blue-500 mt-0.5">Leglinel Conti, 2021 · RISS dumas-03699714</span></li>
+        <p className="text-xs font-semibold text-jfb-rose mb-1 uppercase tracking-[0.12em]">Axe 2 — Contextualisation et motivation en filière professionnelle</p>
+        <ul className="space-y-2 text-xs text-jfb-noir">
+          <li><strong>Contextualisation en lycée professionnel</strong> — Ancrer les apprentissages dans la filière métier est un moyen efficient de mobiliser les apprenants.<span className="block text-jfb-gris-cl mt-0.5">Payet, 2022 · RISS dumas-03984644</span></li>
+          <li><strong>Langue sur objectifs spécifiques</strong> — L&apos;ancrage dans le domaine professionnel réel rend le curriculum plus opérationnel et l&apos;apprentissage plus signifiant.<span className="block text-jfb-gris-cl mt-0.5">Sowa, 2022 · RISS W4225401879</span></li>
+          <li><strong>Motivation intrinsèque</strong> — L&apos;intérêt attribué à une tâche et son ancrage situationnel sont des leviers directs de motivation intrinsèque en LVE.<span className="block text-jfb-gris-cl mt-0.5">Desaivres &amp; Davoli, 2025 · RISS dumas-05216415</span></li>
+          <li><strong>Productions concrètes et engagement</strong> — La dimension contextualisée des productions est un levier de motivation spécifique aux élèves de lycée professionnel.<span className="block text-jfb-gris-cl mt-0.5">Eucat, Khadraoui &amp; Dahman, 2023 · RISS dumas-04676095</span></li>
+          <li><strong>Dimension professionnelle en cours de langue</strong> — Intégrer le contexte métier dans un cours de LVE a un effet positif sur l&apos;engagement et la valorisation des compétences.<span className="block text-jfb-gris-cl mt-0.5">Leglinel Conti, 2021 · RISS dumas-03699714</span></li>
         </ul>
-        <p className="mt-3 text-xs text-blue-400 italic">Sources vérifiées dans le corpus RISS — 522 627 articles scientifiques francophones.</p>
+        <p className="mt-3 text-xs text-jfb-gris-cl italic">Sources vérifiées dans le corpus RISS — 522 627 articles scientifiques francophones.</p>
       </div>
     </main>
   )

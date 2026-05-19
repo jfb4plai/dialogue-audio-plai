@@ -63,7 +63,7 @@ function AudioPlayer({ src }: { src: string }) {
   }
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+    <div className="bg-jfb-subtil border border-jfb-bordure p-4 space-y-3" style={{ borderRadius: '2px' }}>
       <audio ref={audioRef} src={src} preload="metadata" />
 
       {/* Progress bar */}
@@ -72,7 +72,7 @@ function AudioPlayer({ src }: { src: string }) {
         <input
           type="range" min={0} max={duration || 0} step={0.1} value={currentTime}
           onChange={e => seek(Number(e.target.value))}
-          className="flex-1 accent-blue-600"
+          className="flex-1 accent-jfb-rose"
         />
         <span className="w-8">{fmt(duration)}</span>
       </div>
@@ -83,7 +83,8 @@ function AudioPlayer({ src }: { src: string }) {
         {/* Play/Pause */}
         <button
           onClick={togglePlay}
-          className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 text-lg flex-shrink-0"
+          className="w-10 h-10 bg-jfb-noir text-white flex items-center justify-center hover:bg-jfb-noir-doux text-lg flex-shrink-0"
+          style={{ borderRadius: '2px' }}
           aria-label={playing ? 'Pause' : 'Lecture'}
         >
           {playing ? '⏸' : '▶'}
@@ -95,7 +96,7 @@ function AudioPlayer({ src }: { src: string }) {
           <input
             type="range" min={0.5} max={2} step={0.1} value={speed}
             onChange={e => changeSpeed(Number(e.target.value))}
-            className="flex-1 accent-blue-600"
+            className="flex-1 accent-jfb-rose"
           />
         </div>
 
@@ -107,7 +108,7 @@ function AudioPlayer({ src }: { src: string }) {
           <input
             type="range" min={0} max={1} step={0.05} value={volume}
             onChange={e => changeVolume(Number(e.target.value))}
-            className="flex-1 accent-blue-600"
+            className="flex-1 accent-jfb-rose"
           />
         </div>
 
@@ -118,7 +119,7 @@ function AudioPlayer({ src }: { src: string }) {
               key={s}
               onClick={() => changeSpeed(s)}
               className={`px-2 py-0.5 rounded text-xs font-medium ${
-                speed === s ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                speed === s ? 'bg-jfb-noir text-white' : 'bg-jfb-subtil text-jfb-gris hover:bg-jfb-beige border border-jfb-bordure'
               }`}
             >
               {s}×
@@ -148,7 +149,7 @@ export default function AudioResult({ result }: Props) {
     : result.audio_url
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 mt-6">
+    <div className="bg-white border border-jfb-bordure p-6 mt-6" style={{ borderRadius: '2px', borderLeft: '3px solid #FF3399' }}>
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
         Audio généré — {result.duration_seconds}s
       </h2>
@@ -164,7 +165,7 @@ export default function AudioResult({ result }: Props) {
         <img
           src={`data:image/png;base64,${result.qr_base64}`}
           alt="QR code audio"
-          className="w-48 h-48 border border-gray-200 rounded-lg"
+          className="w-48 h-48 border border-jfb-bordure" style={{ borderRadius: '2px' }}
         />
         <p className="text-xs text-gray-400 mt-1">Scannez pour écouter l&apos;audio</p>
       </div>
@@ -185,16 +186,16 @@ export default function AudioResult({ result }: Props) {
       <div className="flex flex-wrap gap-2">
         <a
           href={result.audio_url} download="dialogue.mp3" target="_blank" rel="noopener noreferrer"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+          className="px-4 py-2 bg-jfb-noir text-white text-sm font-medium hover:bg-jfb-noir-doux" style={{ borderRadius: '2px' }}
         >
           Télécharger MP3
         </a>
         <button onClick={downloadQR}
-          className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-medium hover:bg-gray-200">
+          className="px-4 py-2 bg-jfb-subtil text-jfb-gris border border-jfb-bordure text-sm font-medium hover:bg-jfb-beige" style={{ borderRadius: '2px' }}>
           Télécharger QR PNG
         </button>
         <button onClick={copyLink}
-          className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-medium hover:bg-gray-200">
+          className="px-4 py-2 bg-jfb-subtil text-jfb-gris border border-jfb-bordure text-sm font-medium hover:bg-jfb-beige" style={{ borderRadius: '2px' }}>
           Copier le lien
         </button>
       </div>

@@ -45,7 +45,7 @@ export default function SpeakerConfig({ speakers, availableVoices, onChange }: P
             <select
               value={spk.voice}
               onChange={e => updateVoice(i, e.target.value)}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border border-jfb-bordure px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-jfb-rose" style={{ borderRadius: '2px' }}
             >
               {availableVoices.map(v => (
                 <option key={v.id} value={v.id}>{v.label} ({v.gender})</option>
@@ -63,7 +63,7 @@ export default function SpeakerConfig({ speakers, availableVoices, onChange }: P
       {speakers.length < 4 && (
         <button
           onClick={addSpeaker}
-          className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
+          className="mt-2 text-sm text-jfb-rose hover:text-jfb-rose-dk font-medium"
         >
           + Ajouter un locuteur
         </button>
