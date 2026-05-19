@@ -83,29 +83,38 @@ Paramètres :
 
 Génère maintenant le dialogue. Format strict : une réplique par ligne, préfixe ${letters.join(': ou ')+': uniquement'}. Tous les locuteurs (${letters.join(', ')}) doivent intervenir de façon équilibrée.`
 
-  try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 2048,
-      messages: [{ role: 'user', content: userPrompt }],
-      system: systemPrompt,
-    })
-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
-    const clean = raw.split('\n')
-      .map(l => l.trim())
-      .filter(l => /^[A-D]:\s/.test(l))
-      .map(l => l.replace(/\*\*/g, '').replace(/\*/g, '').replace(/_/g, ''))
-      .join('\n')
-    if (!clean) return NextResponse.json({ error: 'Le modèle n\'a pas produit de format valide. Réessayez.' }, { status: 500 })
-    return NextResponse.json({ script: clean })
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
-    if (msg.includes('overloaded') || msg.includes('529')) {
-      return NextResponse.json(
-        { error: "L'IA est momentanément surchargée. Réessayez dans 1-2 minutes." },
-        { status: 503 }
-      )
+  const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
+
+  for (let attempt = 0; attempt <= 2; attempt++) {
+    try {
+      const message = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: userPrompt }],
+        system: systemPrompt,
+      })
+      const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+      const clean = raw.split('\n')
+        .map(l => l.trim())
+        .filter(l => /^[A-D]:\s/.test(l))
+        .map(l => l.replace(/\*\*/g, '').replace(/\*/g, '').replace(/_/g, ''))
+        .join('\n')
+      if (!clean) return NextResponse.json({ error: 'Le modèle n\'a pas produit de format valide. Réessayez.' }, { status: 500 })
+      return NextResponse.json({ script: clean })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      const isOverloaded = msg.includes('overloaded') || msg.includes('529')
+      if (isOverloaded && attempt < 2) {
+        await delay(2000 * (attempt + 1)) // 2s puis 4s
+        continue
+      }
+      if (isOverloaded) {
+        return NextResponse.json(
+          { error: "L'IA est momentanément surchargée. Réessayez dans 1-2 minutes." },
+          { status: 503 }
+        )
+      }
+      return NextResponse.json({ error: msg || 'Erreur inconnue' }, { status: 500 })
     }
-    return NextResponse.json({ error: msg || 'Erreur inconnue' }, { status: 500 })
   }
 }
