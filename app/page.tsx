@@ -173,7 +173,7 @@ export default function Home() {
         return {
           ...sp,
           length_scale: voiceInfo?.length_scale ?? 1.0,
-          engine: voiceInfo?.engine ?? 'piper',
+          engine: voiceInfo?.engine ?? (sp.voice.includes('Neural') ? 'edge-tts' : 'piper'),
         }
       })
       const res = await callHFSpace({
