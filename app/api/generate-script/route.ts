@@ -98,7 +98,14 @@ Génère maintenant le dialogue. Format strict : une réplique par ligne, préfi
       .join('\n')
     if (!clean) return NextResponse.json({ error: 'Le modèle n\'a pas produit de format valide. Réessayez.' }, { status: 500 })
     return NextResponse.json({ script: clean })
-  } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Erreur inconnue' }, { status: 500 })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('overloaded') || msg.includes('529')) {
+      return NextResponse.json(
+        { error: "L'IA est momentanément surchargée. Réessayez dans 1-2 minutes." },
+        { status: 503 }
+      )
+    }
+    return NextResponse.json({ error: msg || 'Erreur inconnue' }, { status: 500 })
   }
 }
