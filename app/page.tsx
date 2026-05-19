@@ -108,12 +108,20 @@ export default function Home() {
   const [silenceMs, setSilenceMs] = useState(500)
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [azureConfigured, setAzureConfigured] = useState<boolean | null>(null)
 
   useEffect(() => {
     fetch('/api/voices')
       .then(r => r.json())
       .then(data => { if (data && !data.error) setVoices(data) })
       .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/azure-status')
+      .then(r => r.json())
+      .then(data => setAzureConfigured(data.configured ?? false))
+      .catch(() => setAzureConfigured(false))
   }, [])
 
   // Restore locale + result from localStorage on mount (not script — fresh start)
@@ -162,6 +170,10 @@ export default function Home() {
 
   const availableVoices = voices[locale]?.voices ?? []
   const canGenerate = script.trim().length > 0 && speakers.length >= 2
+  const hasAzureVoice = speakers.some(sp => {
+    const v = availableVoices.find(v => v.id === sp.voice)
+    return v?.engine === 'azure'
+  })
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
@@ -180,6 +192,11 @@ export default function Home() {
 
         <div className="mb-2 text-xs font-semibold text-blue-600 uppercase tracking-wide">Étape 2 — Locuteurs</div>
         <SpeakerConfig speakers={speakers} availableVoices={availableVoices} onChange={setSpeakers} />
+        {hasAzureVoice && azureConfigured === false && (
+          <div className="mt-2 mb-1 text-xs bg-amber-50 border border-amber-300 text-amber-800 rounded-lg px-3 py-2">
+            Une ou plusieurs voix sélectionnées nécessitent Azure TTS (non configuré). La génération échouera pour ces locuteurs. Contactez le Pôle PLAI pour activer les voix néerlandaises (NL).
+          </div>
+        )}
 
         <div className="mb-2 text-xs font-semibold text-blue-600 uppercase tracking-wide">Étape 3 — Script</div>
         <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} />
