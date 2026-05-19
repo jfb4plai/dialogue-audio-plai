@@ -17,9 +17,11 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         script: body.script,
-        speakers: body.speakers.map((s: { label: string; voice: string }) => ({
+        speakers: body.speakers.map((s: { label: string; voice: string; engine?: string; length_scale?: number }) => ({
           label: s.label,
           voice: s.voice,
+          engine: s.engine ?? 'piper',
+          length_scale: s.length_scale ?? 1.0,
         })),
         silence_ms: body.silence_ms ?? 500,
         item_title: body.item_title ?? 'Dialogue audio',
