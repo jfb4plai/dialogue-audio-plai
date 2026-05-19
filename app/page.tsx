@@ -90,7 +90,7 @@ function HelpBanner() {
           <p><strong>Importer Word :</strong> Extrait le texte d&apos;un .docx. Vérifie que chaque réplique commence bien par A:, B:, etc.</p>
           <p><strong>Limite serveur TTS :</strong> Le serveur traite <strong>3 minutes maximum</strong> via le proxy Vercel. Au-delà de ~60 répliques, divise le script en plusieurs parties.</p>
           <p><strong>Audio généré :</strong> Hébergé sur Internet Archive, accessible via QR code. Disponible ~10 minutes après génération.</p>
-          <p><strong>Langues disponibles :</strong> néerlandais (BE), néerlandais (NL), français, français (Belgique), allemand, anglais (UK), espagnol. <em>Note : fr (Belgique) utilise des voix fr_FR — accent neutre France.</em> Pour toute demande de langue supplémentaire : <a href="mailto:jeanfrancois.beguin@ens.ecl.be" className="underline">jeanfrancois.beguin@ens.ecl.be</a></p>
+          <p><strong>Langues disponibles :</strong> néerlandais BE, néerlandais NL, français, français (Belgique), allemand, anglais (UK), espagnol. <em>Voix neurales Microsoft (Edge TTS) pour le néerlandais — 4 voix nl_BE (Dena, Arnaud, Colette NL, Maarten NL), 3 voix nl_NL (Colette, Fenna, Maarten). Voix fr (Belgique) = accent neutre France.</em> Pour toute demande : <a href="mailto:jeanfrancois.beguin@ens.ecl.be" className="underline">jeanfrancois.beguin@ens.ecl.be</a></p>
         </div>
       )}
     </div>
@@ -101,8 +101,8 @@ export default function Home() {
   const [voices, setVoices] = useState<VoicesConfig>(DEFAULT_VOICES)
   const [locale, setLocale] = useState('nl_BE')
   const [speakers, setSpeakers] = useState<Speaker[]>([
-    { label: 'A', voice: 'nl_BE-nathalie-medium', color: '#3B82F6' },
-    { label: 'B', voice: 'nl_BE-rdh-medium', color: '#EF4444' },
+    { label: 'A', voice: 'nl-BE-DenaNeural', color: '#3B82F6' },
+    { label: 'B', voice: 'nl-BE-ArnaudNeural', color: '#EF4444' },
   ])
   const [script, setScript] = useState('A: Goedemorgen!\nB: Goedemorgen! Hoe gaat het?\nA: Het gaat goed, dank je.')
   const [silenceMs, setSilenceMs] = useState(500)
