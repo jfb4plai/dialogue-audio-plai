@@ -3,6 +3,7 @@ export interface Speaker {
   voice: string
   color: string
   length_scale?: number
+  engine?: string
 }
 
 export interface VoiceInfo {
@@ -10,6 +11,7 @@ export interface VoiceInfo {
   label: string
   gender: string
   length_scale?: number
+  engine?: string
 }
 
 export interface LanguageConfig {

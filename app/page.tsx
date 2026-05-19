@@ -17,17 +17,18 @@ const DEFAULT_VOICES: VoicesConfig = {
   nl_BE: {
     name: 'Flamand (Belgique)',
     voices: [
-      { id: 'nl_BE-nathalie-medium', label: 'Nathalie', gender: 'féminin' },
-      { id: 'nl_BE-rdh-medium', label: 'Rdh', gender: 'masculin' },
-      { id: 'nl_NL-mls-medium', label: 'Kees (NL)', gender: 'masculin', length_scale: 1.25 },
-      { id: 'nl_NL-mls_7432-low', label: 'Lotte (NL)', gender: 'féminin', length_scale: 1.7 },
+      { id: 'nl_BE-nathalie-medium', label: 'Nathalie', gender: 'féminin', engine: 'piper' },
+      { id: 'nl_BE-rdh-medium', label: 'Rdh', gender: 'masculin', engine: 'piper' },
+      { id: 'nl-NL-ColetteNeural', label: 'Colette (NL)', gender: 'féminin', engine: 'azure' },
+      { id: 'nl-NL-MaartenNeural', label: 'Maarten (NL)', gender: 'masculin', engine: 'azure' },
     ],
   },
   nl_NL: {
     name: 'Néerlandais (Pays-Bas)',
     voices: [
-      { id: 'nl_NL-mls-medium', label: 'Kees', gender: 'masculin', length_scale: 1.25 },
-      { id: 'nl_NL-mls_7432-low', label: 'Lotte', gender: 'féminin', length_scale: 1.7 },
+      { id: 'nl-NL-ColetteNeural', label: 'Colette', gender: 'féminin', engine: 'azure' },
+      { id: 'nl-NL-FennaNeural', label: 'Fenna', gender: 'féminin', engine: 'azure' },
+      { id: 'nl-NL-MaartenNeural', label: 'Maarten', gender: 'masculin', engine: 'azure' },
     ],
   },
   fr_FR: {
@@ -142,7 +143,11 @@ export default function Home() {
     try {
       const enrichedSpeakers = speakers.map(sp => {
         const voiceInfo = availableVoices.find(v => v.id === sp.voice)
-        return { ...sp, length_scale: voiceInfo?.length_scale ?? 1.0 }
+        return {
+          ...sp,
+          length_scale: voiceInfo?.length_scale ?? 1.0,
+          engine: voiceInfo?.engine ?? 'piper',
+        }
       })
       const res = await callHFSpace({
         script, speakers: enrichedSpeakers, silence_ms: silenceMs,
