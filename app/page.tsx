@@ -17,18 +17,18 @@ const DEFAULT_VOICES: VoicesConfig = {
   nl_BE: {
     name: 'Flamand (Belgique)',
     voices: [
-      { id: 'nl_BE-nathalie-medium', label: 'Nathalie', gender: 'féminin', engine: 'piper' },
-      { id: 'nl_BE-rdh-medium', label: 'Rdh', gender: 'masculin', engine: 'piper' },
-      { id: 'nl-NL-ColetteNeural', label: 'Colette (NL)', gender: 'féminin', engine: 'azure' },
-      { id: 'nl-NL-MaartenNeural', label: 'Maarten (NL)', gender: 'masculin', engine: 'azure' },
+      { id: 'nl-BE-DenaNeural', label: 'Dena', gender: 'féminin', engine: 'edge-tts' },
+      { id: 'nl-BE-ArnaudNeural', label: 'Arnaud', gender: 'masculin', engine: 'edge-tts' },
+      { id: 'nl-NL-ColetteNeural', label: 'Colette (NL)', gender: 'féminin', engine: 'edge-tts' },
+      { id: 'nl-NL-MaartenNeural', label: 'Maarten (NL)', gender: 'masculin', engine: 'edge-tts' },
     ],
   },
   nl_NL: {
     name: 'Néerlandais (Pays-Bas)',
     voices: [
-      { id: 'nl-NL-ColetteNeural', label: 'Colette', gender: 'féminin', engine: 'azure' },
-      { id: 'nl-NL-FennaNeural', label: 'Fenna', gender: 'féminin', engine: 'azure' },
-      { id: 'nl-NL-MaartenNeural', label: 'Maarten', gender: 'masculin', engine: 'azure' },
+      { id: 'nl-NL-ColetteNeural', label: 'Colette', gender: 'féminin', engine: 'edge-tts' },
+      { id: 'nl-NL-FennaNeural', label: 'Fenna', gender: 'féminin', engine: 'edge-tts' },
+      { id: 'nl-NL-MaartenNeural', label: 'Maarten', gender: 'masculin', engine: 'edge-tts' },
     ],
   },
   fr_FR: {
