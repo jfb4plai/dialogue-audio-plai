@@ -15,6 +15,7 @@ const LOCALE_NAMES: Record<string, string> = {
   de_DE: 'Allemand',
   en_GB: 'Anglais (UK)',
   es_ES: 'Espagnol',
+  it_IT: 'Italien',
 }
 
 export default function ScriptGenerator({ locale, speakerCount, onGenerated }: Props) {

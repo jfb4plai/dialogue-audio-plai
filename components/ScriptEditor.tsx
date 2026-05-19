@@ -22,6 +22,7 @@ const LANG_CODES: Record<string, string> = {
   fr_FR: 'fr',
   fr_BE: 'fr',
   es_ES: 'es',
+  it_IT: 'it',
 }
 
 export default function ScriptEditor({ script, speakers, targetLocale, onChange }: Props) {
