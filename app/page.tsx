@@ -19,7 +19,8 @@ const DEFAULT_VOICES: VoicesConfig = {
     voices: [
       { id: 'nl-BE-DenaNeural', label: 'Dena', gender: 'féminin', engine: 'edge-tts' },
       { id: 'nl-BE-ArnaudNeural', label: 'Arnaud', gender: 'masculin', engine: 'edge-tts' },
-      { id: 'nl-NL-ColetteNeural', label: 'Colette (NL)', gender: 'féminin', engine: 'edge-tts' },
+      { id: 'nl-NL-ColetteNeural', label: 'Colette (NL)', gender: 'féminin',  engine: 'edge-tts' },
+      { id: 'nl-NL-FennaNeural',   label: 'Fenna (NL)',   gender: 'féminin',  engine: 'edge-tts' },
       { id: 'nl-NL-MaartenNeural', label: 'Maarten (NL)', gender: 'masculin', engine: 'edge-tts' },
     ],
   },
@@ -109,7 +110,7 @@ function HelpBanner() {
           <p><strong>Importer Word :</strong> Extrait le texte d&apos;un .docx. Vérifie que chaque réplique commence bien par A:, B:, etc.</p>
           <p><strong>Limite serveur TTS :</strong> Le serveur traite <strong>3 minutes maximum</strong> via le proxy Vercel. Au-delà de ~60 répliques, divise le script en plusieurs parties.</p>
           <p><strong>Audio généré :</strong> Hébergé sur Internet Archive, accessible via QR code. Disponible ~10 minutes après génération.</p>
-          <p><strong>Langues disponibles :</strong> néerlandais BE, néerlandais NL, français, français (Belgique), allemand, anglais (UK), espagnol. <em>Voix neurales Microsoft (Edge TTS) pour le néerlandais — 4 voix nl_BE (Dena, Arnaud, Colette NL, Maarten NL), 3 voix nl_NL (Colette, Fenna, Maarten). Voix fr (Belgique) = accent neutre France.</em> Pour toute demande : <a href="mailto:jeanfrancois.beguin@ens.ecl.be" className="underline">jeanfrancois.beguin@ens.ecl.be</a></p>
+          <p><strong>Langues disponibles :</strong> néerlandais BE, néerlandais NL, français, français (Belgique), allemand, anglais (UK), espagnol. <em>Voix neurales Microsoft (Edge TTS) pour le néerlandais — 5 voix nl_BE (Dena, Arnaud, Colette NL ♭, Fenna NL ♯, Maarten NL), 3 voix nl_NL (Colette, Fenna, Maarten). Voix fr (Belgique) = accent neutre France.</em> Pour toute demande : <a href="mailto:jeanfrancois.beguin@ens.ecl.be" className="underline">jeanfrancois.beguin@ens.ecl.be</a></p>
         </div>
       )}
     </div>
