@@ -8,8 +8,9 @@ import GenerateButton from '@/components/GenerateButton'
 import AudioResult from '@/components/AudioResult'
 import HistoryPanel from '@/components/HistoryPanel'
 import ScriptGenerator from '@/components/ScriptGenerator'
-import { VoicesConfig, Speaker, GenerateResult } from '@/types/dialogue'
+import { VoicesConfig, Speaker, GenerateResult, GeminiVoice, GeminiSpeakerProfile } from '@/types/dialogue'
 import { callHFSpace } from '@/lib/hf-api'
+import GeminiConfig from '@/components/GeminiConfig'
 
 const LS = { locale: 'da_locale', result: 'da_result' }
 
@@ -129,6 +130,12 @@ export default function Home() {
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [azureConfigured, setAzureConfigured] = useState<boolean | null>(null)
+  const [engine, setEngine] = useState<'edge-tts' | 'gemini'>('edge-tts')
+  const [geminiConfigured, setGeminiConfigured] = useState(false)
+  const [geminiVoices, setGeminiVoices] = useState<GeminiVoice[]>([])
+  const [geminiProfiles, setGeminiProfiles] = useState<GeminiSpeakerProfile[]>([])
+  const [ambient, setAmbient] = useState('')
+  const [ambientIntensity, setAmbientIntensity] = useState(0)
 
   useEffect(() => {
     fetch('/api/voices')
@@ -143,6 +150,27 @@ export default function Home() {
       .then(data => setAzureConfigured(data.configured ?? false))
       .catch(() => setAzureConfigured(false))
   }, [])
+
+  useEffect(() => {
+    fetch('/api/gemini-status')
+      .then(r => r.json())
+      .then(data => {
+        setGeminiConfigured(data.configured ?? false)
+        if (data.voices?.length) setGeminiVoices(data.voices)
+      })
+      .catch(() => {})
+  }, [])
+
+  // Sync geminiProfiles when speakers change
+  useEffect(() => {
+    setGeminiProfiles(prev => speakers.map(spk => {
+      const existing = prev.find(p => p.label === spk.label)
+      return existing ?? {
+        label: spk.label, voice: geminiVoices[0]?.id ?? 'Aoede',
+        name: '', age: '', role: '', nativeLanguage: '', personality: '', style: ''
+      }
+    }))
+  }, [speakers, geminiVoices])
 
   // Restore locale + result from localStorage on mount (not script — fresh start)
   useEffect(() => {
@@ -169,18 +197,38 @@ export default function Home() {
     setResult(null)
     try { localStorage.removeItem(LS.result) } catch {}
     try {
-      const enrichedSpeakers = speakers.map(sp => {
-        const voiceInfo = availableVoices.find(v => v.id === sp.voice)
-        return {
-          ...sp,
-          length_scale: voiceInfo?.length_scale ?? 1.0,
-          engine: voiceInfo?.engine ?? (sp.voice.includes('Neural') ? 'edge-tts' : 'piper'),
+      let res: GenerateResult
+      if (engine === 'gemini') {
+        const body = {
+          script,
+          language: locale,
+          speakers: geminiProfiles,
+          ambient,
+          ambient_intensity: ambientIntensity,
+          item_title: `Dialogue ${locale}`,
         }
-      })
-      const res = await callHFSpace({
-        script, speakers: enrichedSpeakers, silence_ms: silenceMs,
-        item_title: `Dialogue ${locale}`,
-      })
+        const r = await fetch('/api/generate-gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        const data = await r.json()
+        if (!r.ok) throw new Error(data.error ?? `Erreur Gemini ${r.status}`)
+        res = data
+      } else {
+        const enrichedSpeakers = speakers.map(sp => {
+          const voiceInfo = availableVoices.find(v => v.id === sp.voice)
+          return {
+            ...sp,
+            length_scale: voiceInfo?.length_scale ?? 1.0,
+            engine: voiceInfo?.engine ?? (sp.voice.includes('Neural') ? 'edge-tts' : 'piper'),
+          }
+        })
+        res = await callHFSpace({
+          script, speakers: enrichedSpeakers, silence_ms: silenceMs,
+          item_title: `Dialogue ${locale}`,
+        })
+      }
       setResult(res)
       try { localStorage.setItem(LS.result, JSON.stringify({ ...res, audio_data: undefined })) } catch {}
     } catch (e: unknown) {
@@ -198,8 +246,8 @@ export default function Home() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dialogue Audio</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-jfb-noir">Dialogue Audio</h1>
+        <p className="text-jfb-gris text-sm mt-1">
           Génération de dialogues audio multivoix — avec assistant IA contextuel
         </p>
       </div>
@@ -222,9 +270,44 @@ export default function Home() {
         <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} />
         <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
 
-        <SilenceSlider value={silenceMs} onChange={setSilenceMs} />
+        {engine === 'edge-tts' && <SilenceSlider value={silenceMs} onChange={setSilenceMs} />}
 
-        <div className="mb-3 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 4 — Générer</div>
+        <div className="mb-3 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 4 — Moteur vocal</div>
+        <div className="mb-4 flex gap-2">
+          <button
+            onClick={() => setEngine('edge-tts')}
+            className={`flex-1 py-2 text-sm font-medium border transition-colors ${engine === 'edge-tts' ? 'bg-jfb-noir text-white border-jfb-noir' : 'bg-white text-jfb-gris border-jfb-bordure hover:border-jfb-noir'}`}
+            style={{ borderRadius: '2px' }}
+          >
+            Edge TTS <span className="text-[10px] opacity-70">— sans inscription</span>
+          </button>
+          <button
+            onClick={() => setEngine('gemini')}
+            className={`flex-1 py-2 text-sm font-medium border transition-colors ${engine === 'gemini' ? 'bg-jfb-rose text-white border-jfb-rose' : 'bg-white text-jfb-gris border-jfb-bordure hover:border-jfb-rose'} ${!geminiConfigured ? 'opacity-50 cursor-not-allowed' : ''}`}
+            style={{ borderRadius: '2px' }}
+            disabled={!geminiConfigured}
+            title={!geminiConfigured ? 'Gemini TTS non configuré sur le serveur' : ''}
+          >
+            Gemini TTS <span className="text-[10px] opacity-70">{geminiConfigured ? '— clé PLAI' : '— non disponible'}</span>
+          </button>
+        </div>
+
+        {engine === 'gemini' && (
+          <div className="mb-4">
+            <GeminiConfig
+              speakers={speakers}
+              geminiVoices={geminiVoices}
+              profiles={geminiProfiles}
+              ambient={ambient}
+              ambientIntensity={ambientIntensity}
+              onProfilesChange={setGeminiProfiles}
+              onAmbientChange={setAmbient}
+              onAmbientIntensityChange={setAmbientIntensity}
+            />
+          </div>
+        )}
+
+        <div className="mb-3 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 5 — Générer</div>
         <div className="mb-3 text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2 leading-relaxed" style={{ borderRadius: '2px' }}>
           L&apos;audio généré est hébergé publiquement sur Internet Archive. Ne pas inclure de données personnelles (noms d&apos;élèves, informations privées) dans le script.
         </div>

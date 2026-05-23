@@ -38,6 +38,24 @@ export interface GenerateResult {
   segments: Segment[]
 }
 
+export interface GeminiVoice {
+  id: string
+  label: string
+  gender: string
+  character: string
+}
+
+export interface GeminiSpeakerProfile {
+  label: string
+  voice: string
+  name: string
+  age: string
+  role: string
+  nativeLanguage: string
+  personality: string
+  style: string
+}
+
 export interface DialogueRecord {
   id: string
   language: string
