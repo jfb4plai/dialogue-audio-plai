@@ -5,7 +5,7 @@ export async function GET() {
   if (!hfUrl) return NextResponse.json({ configured: false })
 
   try {
-    const res = await fetch(`${hfUrl}/azure-status`, { next: { revalidate: 60 } })
+    const res = await fetch(`${hfUrl}/azure-status`, { next: { revalidate: 60 }, headers: { 'X-PLAI-Secret': process.env.HF_SPACE_SECRET ?? '' } })
     const data = await res.json()
     return NextResponse.json(data)
   } catch {

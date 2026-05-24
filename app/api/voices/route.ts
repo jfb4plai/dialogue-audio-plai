@@ -5,7 +5,7 @@ export async function GET() {
   if (!hfUrl) return NextResponse.json({ error: 'HF_SPACE_URL not configured' }, { status: 500 })
 
   try {
-    const res = await fetch(`${hfUrl}/voices`, { next: { revalidate: 300 } })
+    const res = await fetch(`${hfUrl}/voices`, { next: { revalidate: 300 }, headers: { 'X-PLAI-Secret': process.env.HF_SPACE_SECRET ?? '' } })
     const data = await res.json()
     return NextResponse.json(data)
   } catch {

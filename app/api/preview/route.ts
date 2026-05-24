@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const res = await fetch(`${hfUrl}/preview`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-PLAI-Secret': process.env.HF_SPACE_SECRET ?? '' },
       body: JSON.stringify(body),
     })
     const data = await res.json()

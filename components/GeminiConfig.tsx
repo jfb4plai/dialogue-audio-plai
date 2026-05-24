@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { GeminiVoice, GeminiSpeakerProfile } from '@/types/dialogue'
 import { Speaker } from '@/types/dialogue'
 
@@ -30,6 +31,7 @@ export default function GeminiConfig({
   speakers, geminiVoices, profiles, ambient, ambientIntensity,
   onProfilesChange, onAmbientChange, onAmbientIntensityChange
 }: Props) {
+  const [advanced, setAdvanced] = useState(false)
 
   const updateProfile = (label: string, field: keyof GeminiSpeakerProfile, value: string) => {
     onProfilesChange(profiles.map(p => p.label === label ? { ...p, [field]: value } : p))
@@ -44,9 +46,16 @@ export default function GeminiConfig({
   return (
     <div className="space-y-4">
 
-      {/* Usage info */}
-      <div className="text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2" style={{ borderRadius: '2px' }}>
-        <span className="font-semibold text-jfb-rose">Gemini TTS</span> · Quota : 1 500 dialogues/jour · 15/minute · Clé PLAI · Pas d'inscription requise pour les enseignants
+      {/* Usage info + mode toggle */}
+      <div className="flex items-center justify-between text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2" style={{ borderRadius: '2px' }}>
+        <span><span className="font-semibold text-jfb-rose">Gemini TTS</span> · 1 500/jour · 15/min · Clé PLAI · Pas d'inscription requise</span>
+        <button
+          onClick={() => setAdvanced(a => !a)}
+          className="ml-3 flex-shrink-0 text-[10px] px-2 py-0.5 border border-jfb-bordure text-jfb-gris hover:border-jfb-rose hover:text-jfb-rose"
+          style={{ borderRadius: '2px' }}
+        >
+          {advanced ? 'Mode simple' : 'Profils avancés'}
+        </button>
       </div>
 
       {/* Speaker profiles */}
@@ -97,42 +106,46 @@ export default function GeminiConfig({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <div>
-                <label className={labelCls}>Prénom du personnage</label>
-                <input type="text" value={profile.name} placeholder="Emma, Arnaud..."
-                  onChange={e => updateProfile(spk.label, 'name', e.target.value)}
-                  className={inputCls} style={{ borderRadius: '2px' }} />
-              </div>
-              <div>
-                <label className={labelCls}>Âge</label>
-                <input type="text" value={profile.age} placeholder="17 ans, adulte..."
-                  onChange={e => updateProfile(spk.label, 'age', e.target.value)}
-                  className={inputCls} style={{ borderRadius: '2px' }} />
-              </div>
-            </div>
+            {advanced && (
+              <>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div>
+                    <label className={labelCls}>Prénom du personnage</label>
+                    <input type="text" value={profile.name} placeholder="Emma, Arnaud..."
+                      onChange={e => updateProfile(spk.label, 'name', e.target.value)}
+                      className={inputCls} style={{ borderRadius: '2px' }} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Âge</label>
+                    <input type="text" value={profile.age} placeholder="17 ans, adulte..."
+                      onChange={e => updateProfile(spk.label, 'age', e.target.value)}
+                      className={inputCls} style={{ borderRadius: '2px' }} />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <div>
-                <label className={labelCls}>Rôle / Fonction</label>
-                <input type="text" value={profile.role} placeholder="client, hôtelière..."
-                  onChange={e => updateProfile(spk.label, 'role', e.target.value)}
-                  className={inputCls} style={{ borderRadius: '2px' }} />
-              </div>
-              <div>
-                <label className={labelCls}>Langue maternelle</label>
-                <input type="text" value={profile.nativeLanguage} placeholder="français belge, néerlandais..."
-                  onChange={e => updateProfile(spk.label, 'nativeLanguage', e.target.value)}
-                  className={inputCls} style={{ borderRadius: '2px' }} />
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div>
+                    <label className={labelCls}>Rôle / Fonction</label>
+                    <input type="text" value={profile.role} placeholder="client, hôtelière..."
+                      onChange={e => updateProfile(spk.label, 'role', e.target.value)}
+                      className={inputCls} style={{ borderRadius: '2px' }} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Langue maternelle</label>
+                    <input type="text" value={profile.nativeLanguage} placeholder="français belge, néerlandais..."
+                      onChange={e => updateProfile(spk.label, 'nativeLanguage', e.target.value)}
+                      className={inputCls} style={{ borderRadius: '2px' }} />
+                  </div>
+                </div>
 
-            <div>
-              <label className={labelCls}>Personnalité / Traits <span className="text-jfb-gris-cl">(optionnel)</span></label>
-              <input type="text" value={profile.personality} placeholder="chaleureux, direct, timide..."
-                onChange={e => updateProfile(spk.label, 'personality', e.target.value)}
-                className={inputCls} style={{ borderRadius: '2px' }} />
-            </div>
+                <div>
+                  <label className={labelCls}>Personnalité / Traits <span className="text-jfb-gris-cl">(optionnel)</span></label>
+                  <input type="text" value={profile.personality} placeholder="chaleureux, direct, timide..."
+                    onChange={e => updateProfile(spk.label, 'personality', e.target.value)}
+                    className={inputCls} style={{ borderRadius: '2px' }} />
+                </div>
+              </>
+            )}
           </div>
         )
       })}

@@ -151,7 +151,10 @@ export default function AudioResult({ result }: Props) {
   return (
     <div className="bg-white border border-jfb-bordure p-6 mt-6" style={{ borderRadius: '2px', borderLeft: '3px solid #FF3399' }}>
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
-        Audio généré — {result.duration_seconds}s
+        Audio généré — {result.duration_seconds != null ? (() => {
+          const s = Math.round(result.duration_seconds as number)
+          return s >= 60 ? `${Math.floor(s/60)} min ${s%60} s` : `${s} s`
+        })() : '—'}
       </h2>
 
       <AudioPlayer src={audioSrc} />
@@ -167,7 +170,9 @@ export default function AudioResult({ result }: Props) {
           alt="QR code audio"
           className="w-48 h-48 border border-jfb-bordure" style={{ borderRadius: '2px' }}
         />
-        <p className="text-xs text-gray-400 mt-1">Scannez pour écouter l&apos;audio</p>
+        <p className="text-xs text-jfb-gris mt-2 text-center">
+          Vos élèves scannent ce code avec l&apos;appareil photo de leur téléphone pour écouter l&apos;audio directement — sans application, sans compte.
+        </p>
       </div>
 
       {/* Segments */}
@@ -200,9 +205,6 @@ export default function AudioResult({ result }: Props) {
         </button>
       </div>
 
-      <p className="text-xs text-gray-400 mt-4">
-        Audio généré avec Piper TTS — licence MIT — open source
-      </p>
     </div>
   )
 }

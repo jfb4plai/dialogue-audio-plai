@@ -360,6 +360,22 @@ export default function Home() {
 
         <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 4 — Script</div>
         <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} engine={engine} geminiProfiles={geminiProfiles} />
+        <div className="mb-3">
+          <p className="text-[11px] text-jfb-gris mb-1.5">Charger un exemple :</p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: 'Service client', script: `A: Goedemorgen! Kan ik u helpen?\nB: Ja, graag. Ik wil een kamer reserveren voor twee nachten.\nA: Natuurlijk. Welke datum heeft u in gedachten?\nB: Van de vijftiende tot de zeventiende.\nA: Perfect. Een kamer voor één persoon?\nB: Nee, voor twee personen, graag.\nA: Geen probleem. Ik reserveer dat meteen voor u.` },
+              { label: 'Au restaurant', script: `A: Bonsoir ! Avez-vous une réservation ?\nB: Oui, au nom de Dubois, pour deux personnes.\nA: Très bien, par ici. Voici notre carte.\nB: Merci. Qu'est-ce que vous recommandez ce soir ?\nA: Le poisson du jour est excellent. Et en entrée, notre velouté maison.\nB: Parfait. Je prends ça.` },
+              { label: 'Consultation', script: `A: Guten Morgen. Was kann ich für Sie tun?\nB: Ich habe seit drei Tagen Halsschmerzen.\nA: Haben Sie auch Fieber?\nB: Ja, gestern Abend hatte ich 38,5 Grad.\nA: Ich sehe mir das an. Bitte öffnen Sie den Mund.\nB: So?\nA: Gut. Ich verschreibe Ihnen ein Antibiotikum.` },
+            ].map(t => (
+              <button key={t.label} onClick={() => setScript(t.script)}
+                className="text-xs px-3 py-1.5 border border-jfb-bordure text-jfb-gris hover:border-jfb-rose hover:text-jfb-rose bg-white"
+                style={{ borderRadius: '2px' }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
 
         {engine === 'edge-tts' && <SilenceSlider value={silenceMs} onChange={setSilenceMs} />}

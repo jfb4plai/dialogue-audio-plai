@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   try {
     const hfRes = await fetch(`${hfUrl}/generate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-PLAI-Secret': process.env.HF_SPACE_SECRET ?? '' },
       body: JSON.stringify({
         script: body.script,
         speakers: body.speakers.map((s: { label: string; voice: string; engine?: string; length_scale?: number }) => ({

@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 const STEPS = [
   'Connexion au serveur TTS...',
-  'Téléchargement des modèles vocaux...',
+  'Synthèse vocale en cours...',
   'Génération des répliques...',
   'Assemblage de l\'audio...',
   'Upload sur archive.org...',
