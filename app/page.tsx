@@ -11,6 +11,7 @@ import ScriptGenerator from '@/components/ScriptGenerator'
 import { VoicesConfig, Speaker, GenerateResult, GeminiVoice, GeminiSpeakerProfile } from '@/types/dialogue'
 import { callHFSpace } from '@/lib/hf-api'
 import GeminiConfig from '@/components/GeminiConfig'
+import ActivitesDeriveesPanel from '@/components/ActivitesDeriveesPanel'
 
 const LS = { locale: 'da_locale', result: 'da_result' }
 const SPEAKER_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B']
@@ -394,6 +395,7 @@ export default function Home() {
       </div>
 
       {result && <AudioResult result={result} />}
+      {result && <ActivitesDeriveesPanel script={script} locale={locale} speakers={speakers} />}
       <HistoryPanel />
 
       <div className="mt-8 border border-jfb-bordure bg-jfb-beige p-5" style={{ borderRadius: '2px', borderLeft: '3px solid #FF3399' }}>
