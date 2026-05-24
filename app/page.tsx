@@ -13,6 +13,7 @@ import { callHFSpace } from '@/lib/hf-api'
 import GeminiConfig from '@/components/GeminiConfig'
 
 const LS = { locale: 'da_locale', result: 'da_result' }
+const SPEAKER_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B']
 
 const DEFAULT_VOICES: VoicesConfig = {
   nl_BE: {
@@ -237,6 +238,22 @@ export default function Home() {
   }
 
   const availableVoices = voices[locale]?.voices ?? []
+
+  const addSpeaker = () => {
+    if (speakers.length >= 4) return
+    const label = String.fromCharCode(65 + speakers.length)
+    setSpeakers(prev => [...prev, {
+      label,
+      voice: availableVoices[prev.length % availableVoices.length]?.id ?? '',
+      color: SPEAKER_COLORS[prev.length],
+    }])
+  }
+
+  const removeSpeaker = () => {
+    if (speakers.length <= 2) return
+    setSpeakers(prev => prev.slice(0, -1))
+  }
+
   const canGenerate = script.trim().length > 0 && speakers.length >= 2
   const hasAzureVoice = speakers.some(sp => {
     const v = availableVoices.find(v => v.id === sp.voice)
@@ -299,6 +316,26 @@ export default function Home() {
         </div>
 
         <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 3 — Locuteurs</div>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex gap-1.5">
+            {speakers.map((spk, i) => (
+              <span key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                style={{ backgroundColor: SPEAKER_COLORS[i] }}>{spk.label}</span>
+            ))}
+          </div>
+          <div className="flex gap-2 ml-auto">
+            {speakers.length > 2 && (
+              <button onClick={removeSpeaker}
+                className="text-xs px-2 py-1 border border-jfb-bordure text-jfb-gris hover:border-red-400 hover:text-red-500"
+                style={{ borderRadius: '2px' }}>− Retirer</button>
+            )}
+            {speakers.length < 4 && (
+              <button onClick={addSpeaker}
+                className="text-xs px-2 py-1 border border-jfb-bordure text-jfb-rose hover:border-jfb-rose font-medium"
+                style={{ borderRadius: '2px' }}>+ Ajouter</button>
+            )}
+          </div>
+        </div>
         {engine === 'edge-tts' ? (
           <>
             <SpeakerConfig speakers={speakers} availableVoices={availableVoices} onChange={setSpeakers} />

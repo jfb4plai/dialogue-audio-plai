@@ -35,20 +35,6 @@ export default function SpeakerConfig({ speakers, availableVoices, onChange }: P
     }
   }
 
-  const addSpeaker = () => {
-    if (speakers.length >= 4) return
-    const label = String.fromCharCode(65 + speakers.length) // A, B, C, D
-    onChange([...speakers, {
-      label,
-      voice: availableVoices[speakers.length % availableVoices.length]?.id ?? '',
-      color: COLORS[speakers.length],
-    }])
-  }
-
-  const removeSpeaker = (i: number) => {
-    onChange(speakers.filter((_, idx) => idx !== i))
-  }
-
   const updateVoice = (i: number, voice: string) => {
     const updated = [...speakers]
     updated[i] = { ...updated[i], voice }
@@ -88,23 +74,9 @@ export default function SpeakerConfig({ speakers, availableVoices, onChange }: P
             >
               {previewingVoice === spk.voice ? '⏳' : '▶'}
             </button>
-            {speakers.length > 2 && (
-              <button
-                onClick={() => removeSpeaker(i)}
-                className="text-gray-400 hover:text-red-500 text-lg"
-              >×</button>
-            )}
-          </div>
+            </div>
         ))}
       </div>
-      {speakers.length < 4 && (
-        <button
-          onClick={addSpeaker}
-          className="mt-2 text-sm text-jfb-rose hover:text-jfb-rose-dk font-medium"
-        >
-          + Ajouter un locuteur
-        </button>
-      )}
     </div>
   )
 }
