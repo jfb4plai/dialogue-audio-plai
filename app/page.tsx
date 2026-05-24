@@ -258,21 +258,7 @@ export default function Home() {
         <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 1 — Langue</div>
         <LanguageSelector voices={voices} selected={locale} onChange={setLocale} />
 
-        <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 2 — Locuteurs</div>
-        <SpeakerConfig speakers={speakers} availableVoices={availableVoices} onChange={setSpeakers} />
-        {hasAzureVoice && azureConfigured === false && (
-          <div className="mt-2 mb-1 text-xs bg-jfb-beige border border-jfb-beige-dk text-jfb-gris px-3 py-2" style={{ borderRadius: '2px', borderLeft: '3px solid #FF3399' }}>
-            Une ou plusieurs voix sélectionnées nécessitent Azure TTS (non configuré). La génération échouera pour ces locuteurs. Contactez le Pôle PLAI pour activer les voix néerlandaises (NL).
-          </div>
-        )}
-
-        <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 3 — Script</div>
-        <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} />
-        <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
-
-        {engine === 'edge-tts' && <SilenceSlider value={silenceMs} onChange={setSilenceMs} />}
-
-        <div className="mb-3 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 4 — Moteur vocal</div>
+        <div className="mb-3 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 2 — Moteur vocal</div>
         <div className="mb-4 flex gap-2">
           <button
             onClick={() => setEngine('edge-tts')}
@@ -292,20 +278,34 @@ export default function Home() {
           </button>
         </div>
 
-        {engine === 'gemini' && (
-          <div className="mb-4">
-            <GeminiConfig
-              speakers={speakers}
-              geminiVoices={geminiVoices}
-              profiles={geminiProfiles}
-              ambient={ambient}
-              ambientIntensity={ambientIntensity}
-              onProfilesChange={setGeminiProfiles}
-              onAmbientChange={setAmbient}
-              onAmbientIntensityChange={setAmbientIntensity}
-            />
-          </div>
+        <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 3 — Locuteurs</div>
+        {engine === 'edge-tts' ? (
+          <>
+            <SpeakerConfig speakers={speakers} availableVoices={availableVoices} onChange={setSpeakers} />
+            {hasAzureVoice && azureConfigured === false && (
+              <div className="mt-2 mb-1 text-xs bg-jfb-beige border border-jfb-beige-dk text-jfb-gris px-3 py-2" style={{ borderRadius: '2px', borderLeft: '3px solid #FF3399' }}>
+                Une ou plusieurs voix sélectionnées nécessitent Azure TTS (non configuré). La génération échouera pour ces locuteurs. Contactez le Pôle PLAI pour activer les voix néerlandaises (NL).
+              </div>
+            )}
+          </>
+        ) : (
+          <GeminiConfig
+            speakers={speakers}
+            geminiVoices={geminiVoices}
+            profiles={geminiProfiles}
+            ambient={ambient}
+            ambientIntensity={ambientIntensity}
+            onProfilesChange={setGeminiProfiles}
+            onAmbientChange={setAmbient}
+            onAmbientIntensityChange={setAmbientIntensity}
+          />
         )}
+
+        <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 4 — Script</div>
+        <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} />
+        <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
+
+        {engine === 'edge-tts' && <SilenceSlider value={silenceMs} onChange={setSilenceMs} />}
 
         <div className="mb-3 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 5 — Générer</div>
         <div className="mb-3 text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2 leading-relaxed" style={{ borderRadius: '2px' }}>
