@@ -2,8 +2,6 @@
 import { useState } from 'react'
 import { Speaker, VoiceInfo } from '@/types/dialogue'
 
-const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B']
-
 interface Props {
   speakers: Speaker[]
   availableVoices: VoiceInfo[]
