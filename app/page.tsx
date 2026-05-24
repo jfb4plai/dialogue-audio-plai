@@ -259,7 +259,7 @@ export default function Home() {
         <LanguageSelector voices={voices} selected={locale} onChange={setLocale} />
 
         <div className="mb-3 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 2 — Moteur vocal</div>
-        <div className="mb-4 flex gap-2">
+        <div className="mb-3 flex gap-2">
           <button
             onClick={() => setEngine('edge-tts')}
             className={`flex-1 py-2 text-sm font-medium border transition-colors ${engine === 'edge-tts' ? 'bg-jfb-noir text-white border-jfb-noir' : 'bg-white text-jfb-gris border-jfb-bordure hover:border-jfb-noir'}`}
@@ -276,6 +276,26 @@ export default function Home() {
           >
             Gemini TTS <span className="text-[10px] opacity-70">{geminiConfigured ? '— clé PLAI' : '— non disponible'}</span>
           </button>
+        </div>
+        <div className="mb-4 text-[11px] text-jfb-gris border border-jfb-bordure bg-jfb-subtil" style={{ borderRadius: '2px' }}>
+          <div className="grid grid-cols-3 border-b border-jfb-bordure">
+            <div className="px-3 py-2 font-semibold text-jfb-noir"></div>
+            <div className={`px-3 py-2 font-semibold text-center ${engine === 'edge-tts' ? 'text-jfb-noir bg-white' : ''}`}>Edge TTS</div>
+            <div className={`px-3 py-2 font-semibold text-center ${engine === 'gemini' ? 'text-jfb-rose bg-white' : ''}`}>Gemini TTS</div>
+          </div>
+          {[
+            ['Voix', 'Neurales Microsoft', 'Génératives Google'],
+            ['Personnages', 'Voix brutes — aucun profil', 'Nom, âge, rôle, langue maternelle, personnalité'],
+            ['Ambiance sonore', '—', 'Oui (description + intensité)'],
+            ['Script IA', 'Générique', 'Adapté aux profils des personnages'],
+            ['Quota', 'Illimité', '1 500/jour · 15/minute'],
+          ].map(([label, edge, gemini]) => (
+            <div key={label} className="grid grid-cols-3 border-b border-jfb-bordure last:border-0">
+              <div className="px-3 py-1.5 font-medium text-jfb-noir">{label}</div>
+              <div className={`px-3 py-1.5 text-center ${engine === 'edge-tts' ? 'bg-white' : ''}`}>{edge}</div>
+              <div className={`px-3 py-1.5 text-center ${engine === 'gemini' ? 'bg-white text-jfb-noir' : ''}`}>{gemini}</div>
+            </div>
+          ))}
         </div>
 
         <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 3 — Locuteurs</div>
@@ -302,7 +322,7 @@ export default function Home() {
         )}
 
         <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Étape 4 — Script</div>
-        <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} />
+        <ScriptGenerator locale={locale} speakerCount={speakers.length} onGenerated={setScript} engine={engine} geminiProfiles={geminiProfiles} />
         <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
 
         {engine === 'edge-tts' && <SilenceSlider value={silenceMs} onChange={setSilenceMs} />}

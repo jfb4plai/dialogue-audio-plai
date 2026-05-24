@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
   const {
     niveau = '', filiere = '', contexte = '', sujet = '',
     nb_repliques = 20, registre = 'mixte', vocabulaire = '',
+    gemini_profiles = null,
   } = body
 
   const vocNote = vocabulaire.trim() ? `\n- Vocabulaire à inclure obligatoirement : ${vocabulaire.trim()}` : ''
@@ -56,6 +57,27 @@ export async function POST(req: NextRequest) {
   const locuteurs = type_dialogue === 'monologue'
     ? 'A uniquement (monologue)'
     : `${letters.join(', ')} (${nb_locuteurs} locuteurs alternés)`
+
+  // ── Gemini character profiles ─────────────────────────────────────────────
+  let profilesNote = ''
+  if (gemini_profiles && Array.isArray(gemini_profiles)) {
+    const profileLines = gemini_profiles
+      .map((p: { label: string; name?: string; age?: string; role?: string; nativeLanguage?: string; personality?: string; style?: string }) => {
+        const parts = [
+          p.name ? `prénom : ${p.name}` : null,
+          p.age ? `âge : ${p.age}` : null,
+          p.role ? `rôle : ${p.role}` : null,
+          p.nativeLanguage ? `langue maternelle : ${p.nativeLanguage}` : null,
+          p.personality ? `personnalité : ${p.personality}` : null,
+          p.style ? `registre émotionnel : ${p.style}` : null,
+        ].filter(Boolean)
+        return parts.length ? `  ${p.label} — ${parts.join(', ')}` : null
+      })
+      .filter(Boolean)
+    if (profileLines.length) {
+      profilesNote = `\n- Personnages (à respecter dans les répliques) :\n${profileLines.join('\n')}`
+    }
+  }
 
   const systemPrompt = `Tu génères des scripts de dialogue pédagogiques pour des enseignants de la Fédération Wallonie-Bruxelles.
 
@@ -79,7 +101,7 @@ Paramètres :
 - Type : ${locuteurs}
 - Nombre de répliques : ${nb_repliques}
 - Sujet : ${sujet || 'conversation courante'}
-- Registre : ${registre}${niveauNote}${filiereNote}${contexteNote}${vocNote}
+- Registre : ${registre}${niveauNote}${filiereNote}${contexteNote}${vocNote}${profilesNote}
 
 Génère maintenant le dialogue. Format strict : une réplique par ligne, préfixe ${letters.join(': ou ')+': uniquement'}. Tous les locuteurs (${letters.join(', ')}) doivent intervenir de façon équilibrée.`
 

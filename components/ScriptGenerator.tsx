@@ -1,10 +1,13 @@
 'use client'
 import { useState } from 'react'
+import { GeminiSpeakerProfile } from '@/types/dialogue'
 
 interface Props {
   locale: string
   speakerCount: number
   onGenerated: (script: string) => void
+  engine?: string
+  geminiProfiles?: GeminiSpeakerProfile[]
 }
 
 const LOCALE_NAMES: Record<string, string> = {
@@ -18,7 +21,7 @@ const LOCALE_NAMES: Record<string, string> = {
   it_IT: 'Italien',
 }
 
-export default function ScriptGenerator({ locale, speakerCount, onGenerated }: Props) {
+export default function ScriptGenerator({ locale, speakerCount, onGenerated, engine, geminiProfiles }: Props) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +41,7 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated }: P
       const res = await fetch('/api/generate-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale, niveau, filiere, contexte, sujet, nb_repliques: nbRepliques, registre, vocabulaire, type_dialogue: typeDialogue, nb_locuteurs: speakerCount }),
+        body: JSON.stringify({ locale, niveau, filiere, contexte, sujet, nb_repliques: nbRepliques, registre, vocabulaire, type_dialogue: typeDialogue, nb_locuteurs: speakerCount, gemini_profiles: engine === 'gemini' ? geminiProfiles : undefined }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -71,6 +74,21 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated }: P
                 : `Dialogue — ${speakerCount} locuteurs (${['A','B','C','D'].slice(0, speakerCount).join(', ')})`}
             </div>
           </div>
+          {engine === 'gemini' && geminiProfiles && geminiProfiles.some(p => p.name || p.role || p.age) && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Personnages Gemini <span className="text-jfb-rose">(utilisés pour la génération)</span></label>
+              <div className="space-y-1">
+                {geminiProfiles.map(p => {
+                  const desc = [p.name, p.age, p.role, p.nativeLanguage, p.personality].filter(Boolean).join(' · ')
+                  return desc ? (
+                    <div key={p.label} className="text-xs bg-white border border-jfb-bordure px-3 py-1.5" style={{ borderRadius: '2px' }}>
+                      <span className="font-semibold text-jfb-rose mr-2">{p.label}</span>{desc}
+                    </div>
+                  ) : null
+                })}
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Niveau <span className="text-gray-400">(optionnel)</span></label>
