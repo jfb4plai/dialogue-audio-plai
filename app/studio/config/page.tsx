@@ -77,11 +77,14 @@ export default function ConfigPage() {
   }, [speakers, geminiVoices])
 
   // Pour podcast → forcer Gemini
+  // Pour dialogue avec Gemini non configuré → forcer edge-tts (évite fichier vide silencieux)
   useEffect(() => {
     if (mode === 'podcast' && engine !== 'gemini') {
       dispatch({ type: 'SET_ENGINE', payload: 'gemini' })
+    } else if (mode === 'dialogue' && engine === 'gemini' && geminiVoices.length === 0) {
+      dispatch({ type: 'SET_ENGINE', payload: 'edge-tts' })
     }
-  }, [mode, engine, dispatch])
+  }, [mode, engine, geminiVoices.length, dispatch])
 
   const availableVoices = voices[locale]?.voices ?? DEFAULT_VOICES[locale]?.voices ?? []
 

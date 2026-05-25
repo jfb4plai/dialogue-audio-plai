@@ -47,6 +47,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Gemini TTS unavailable: ${msg}` }, { status: 502 })
   }
 
+  // Valider que l'audio n'est pas vide
+  if (!data.audio_url && !data.audio_data) {
+    return NextResponse.json({ error: 'Gemini TTS a retourné un fichier vide. Vérifiez la clé API et la configuration du serveur.' }, { status: 502 })
+  }
+  if (data.duration_seconds === 0 || data.duration_seconds === '0') {
+    return NextResponse.json({ error: 'Audio généré vide (durée 0s). Vérifiez le script et la configuration Gemini.' }, { status: 502 })
+  }
+
   // Save to Supabase (best-effort)
   if (data.audio_url) {
     try {
