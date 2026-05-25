@@ -15,8 +15,15 @@ export async function POST(req: Request) {
       signal: AbortSignal.timeout(55_000),
     })
     const text = await res.text()
-    let data: unknown
-    try { data = JSON.parse(text) } catch { data = { error: `HF Space ${res.status}: ${text.slice(0, 200)}` } }
+    let data: Record<string, unknown>
+    try {
+      const parsed = JSON.parse(text)
+      // Normalize FastAPI {"detail":"..."} → {"error":"..."}
+      data = typeof parsed === 'object' && parsed !== null ? parsed : { error: text.slice(0, 200) }
+      if (!data.error && data.detail) data = { error: String(data.detail) }
+    } catch {
+      data = { error: `HF Space ${res.status}: ${text.slice(0, 200)}` }
+    }
     return NextResponse.json(data, { status: res.ok ? res.status : 502 })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
