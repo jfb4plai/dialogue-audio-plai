@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+export const maxDuration = 60
+
 export async function POST(req: NextRequest) {
   const body = await req.json()
   const hfUrl = process.env.NEXT_PUBLIC_HF_SPACE_URL
