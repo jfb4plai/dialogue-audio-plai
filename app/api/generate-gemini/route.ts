@@ -14,8 +14,10 @@ export async function POST(req: Request) {
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(55_000),
     })
-    const data = await res.json()
-    return NextResponse.json(data, { status: res.status })
+    const text = await res.text()
+    let data: unknown
+    try { data = JSON.parse(text) } catch { data = { error: `HF Space ${res.status}: ${text.slice(0, 200)}` } }
+    return NextResponse.json(data, { status: res.ok ? res.status : 502 })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     return NextResponse.json({ error: `Gemini TTS unavailable: ${msg}` }, { status: 502 })
