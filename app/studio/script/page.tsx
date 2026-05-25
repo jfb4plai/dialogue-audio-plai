@@ -93,10 +93,14 @@ export default function ScriptPage() {
   const handleGenerate = async () => {
     if (!script.trim() || speakers.length < 2) return
     setError(null)
+
+    // Sécurité : si engine=gemini mais Gemini non configuré (pas de voix), bloquer ici
+    const effectiveEngine = (engine === 'gemini' && state.geminiVoices.length === 0) ? 'edge-tts' : engine
+
     const token = await getAuthToken()
 
     let res: GenerateResult
-    if (engine === 'gemini') {
+    if (effectiveEngine === 'gemini') {
       const r = await fetch('/api/generate-gemini', {
         method: 'POST',
         headers: {
@@ -124,7 +128,7 @@ export default function ScriptPage() {
       const data = await r.json()
       if (!r.ok) throw new Error(data.error ?? `Erreur Gemini ${r.status}`)
       res = data
-    } else {
+    } else { // effectiveEngine === 'edge-tts'
       const availableVoices = voices[locale]?.voices ?? []
       const enrichedSpeakers = speakers.map(sp => {
         const voiceInfo = availableVoices.find(v => v.id === sp.voice)
