@@ -16,7 +16,8 @@ export async function POST(req: Request) {
     })
     const data = await res.json()
     return NextResponse.json(data, { status: res.status })
-  } catch {
-    return NextResponse.json({ error: 'Gemini TTS unavailable' }, { status: 502 })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: `Gemini TTS unavailable: ${msg}` }, { status: 502 })
   }
 }
