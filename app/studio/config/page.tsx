@@ -240,14 +240,24 @@ export default function ConfigPage() {
         )}
 
         {/* CTA */}
-        <button
-          onClick={handleContinue}
-          disabled={!canContinue || (isPodcast && !geminiConfigured)}
-          className="w-full py-3 text-sm font-semibold bg-jfb-noir text-white hover:bg-jfb-noir-doux disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          style={{ borderRadius: '2px' }}
-        >
-          Continuer vers le script →
-        </button>
+        {(() => {
+          const isDisabled = !canContinue || (isPodcast && !geminiConfigured)
+          return (
+            <button
+              onClick={handleContinue}
+              disabled={isDisabled}
+              className="w-full py-3 text-sm font-semibold text-white transition-colors"
+              style={{
+                borderRadius: '2px',
+                backgroundColor: isDisabled ? '#5a5a5a' : '#1a1a1a',
+                opacity: isDisabled ? 0.5 : 1,
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Continuer vers le script →
+            </button>
+          )
+        })()}
       </div>
     </main>
   )

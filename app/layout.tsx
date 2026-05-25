@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className="bg-gray-50 min-h-screen">
-        <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-          <Image src="/plai-logo.jpg" alt="PLAI" width={200} height={80} style={{ height: 'auto' }} className="object-contain" priority />
+      <body className="bg-jfb-subtil min-h-screen">
+        <header className="bg-white border-b border-jfb-bordure px-6 py-3 flex items-center justify-between">
+          <Image src="/plai-logo.jpg" alt="PLAI" width={160} height={64} className="object-contain" priority />
           <AuthWidget />
         </header>
         {children}
