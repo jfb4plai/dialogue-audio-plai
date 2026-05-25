@@ -21,16 +21,17 @@ export default function GenerateButton({ onGenerate, disabled }: Props) {
   const [step, setStep] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const [timedOut, setTimedOut] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const handleClick = async () => {
     setLoading(true)
     setTimedOut(false)
     setElapsed(0)
+    setErrorMsg(null)
 
     let stepIdx = 0
     setStep(STEPS[0])
 
-    // Cycle through steps roughly every 8s to give feedback
     const stepInterval = setInterval(() => {
       stepIdx = Math.min(stepIdx + 1, STEPS.length - 2)
       setStep(STEPS[stepIdx])
@@ -46,8 +47,8 @@ export default function GenerateButton({ onGenerate, disabled }: Props) {
     try {
       await onGenerate()
       setStep(STEPS[STEPS.length - 1])
-    } catch {
-      setStep('Erreur lors de la génération')
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Erreur lors de la génération')
     } finally {
       clearInterval(stepInterval)
       clearInterval(timer)
@@ -60,23 +61,33 @@ export default function GenerateButton({ onGenerate, disabled }: Props) {
       <button
         onClick={handleClick}
         disabled={disabled || loading}
-        className="w-full bg-jfb-noir hover:bg-jfb-noir-doux disabled:bg-gray-400 text-white font-semibold py-3 transition-colors"
-        style={{ borderRadius: '2px' }}
+        className="w-full text-white font-semibold py-3 transition-colors"
+        style={{
+          borderRadius: '2px',
+          backgroundColor: disabled || loading ? '#5a5a5a' : '#FF3399',
+          opacity: disabled ? 0.5 : 1,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+        }}
       >
         {loading ? 'Génération en cours...' : 'Générer le dialogue audio'}
       </button>
       {loading && (
-        <div className="mt-3 text-sm text-gray-600 space-y-1">
+        <div className="mt-3 text-sm text-jfb-gris space-y-1">
           <div className="flex items-center gap-2">
             <span className="animate-spin">⟳</span>
             <span>{step}</span>
           </div>
-          <div className="text-xs text-gray-400">{elapsed}s écoulées</div>
+          <div className="text-xs text-jfb-gris-cl">{elapsed}s écoulées</div>
           {timedOut && (
             <div className="text-xs text-amber-600 mt-1">
-              Le serveur TTS est en cours de démarrage, cela peut prendre jusqu&apos;à 2 minutes lors de la première utilisation.
+              Le serveur TTS est en cours de démarrage — cela peut prendre jusqu&apos;à 2 minutes lors de la première utilisation.
             </div>
           )}
+        </div>
+      )}
+      {errorMsg && (
+        <div className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2" style={{ borderRadius: '2px' }}>
+          {errorMsg}
         </div>
       )}
     </div>
