@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-PLAI-Secret': process.env.HF_SPACE_SECRET ?? '' },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(55_000),
+      signal: AbortSignal.timeout(58_000),
     })
     const text = await res.text()
     let data: Record<string, unknown>
