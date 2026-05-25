@@ -30,11 +30,6 @@ export default function AuthWidget() {
     setLoading(true)
     setError(null)
     setMessage(null)
-    if (!sb) {
-      setError('Service non disponible (Supabase non configuré).')
-      setLoading(false)
-      return
-    }
     try {
       if (mode === 'login') {
         const { error } = await sb.auth.signInWithPassword({ email, password })
@@ -60,11 +55,12 @@ export default function AuthWidget() {
 
   if (user) {
     return (
-      <div className="flex items-center gap-3 text-xs text-gray-600">
+      <div className="flex items-center gap-3 text-xs text-jfb-gris">
         <span className="hidden sm:block">{user.email}</span>
         <button
           onClick={handleLogout}
-          className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 text-gray-700"
+          className="px-3 py-1 border border-jfb-bordure hover:border-jfb-noir hover:text-jfb-noir text-jfb-gris transition-colors"
+          style={{ borderRadius: '2px' }}
         >
           Déconnexion
         </button>
@@ -76,55 +72,59 @@ export default function AuthWidget() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-xs px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+        className="text-xs px-3 py-1 border border-jfb-bordure text-jfb-gris hover:border-jfb-noir hover:text-jfb-noir transition-colors"
+        style={{ borderRadius: '2px' }}
       >
         Se connecter
       </button>
 
       {open && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div className="bg-white shadow-xl w-full max-w-sm p-6 border border-jfb-bordure" style={{ borderRadius: '2px' }}>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold text-gray-900">
+              <h2 className="font-semibold text-jfb-noir text-sm">
                 {mode === 'login' ? 'Connexion' : 'Créer un compte'}
               </h2>
               <button onClick={() => { setOpen(false); setError(null); setMessage(null) }}
-                className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                className="text-jfb-gris hover:text-jfb-noir text-lg leading-none">✕</button>
             </div>
 
             {message ? (
-              <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">{message}</p>
+              <p className="text-sm text-jfb-noir bg-jfb-beige border border-jfb-beige-dk px-3 py-2" style={{ borderRadius: '2px' }}>{message}</p>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3">
                 <input
                   type="email" required placeholder="Email"
                   value={email} onChange={e => setEmail(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-jfb-bordure px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-jfb-rose"
+                  style={{ borderRadius: '2px' }}
                 />
                 <input
                   type="password" required placeholder="Mot de passe"
                   value={password} onChange={e => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-jfb-bordure px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-jfb-rose"
+                  style={{ borderRadius: '2px' }}
                 />
-                {error && <p className="text-xs text-red-600">{error}</p>}
+                {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-2 py-1" style={{ borderRadius: '2px' }}>{error}</p>}
                 <button
                   type="submit" disabled={loading}
-                  className="w-full py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+                  className="w-full py-2 bg-jfb-noir text-white text-sm font-semibold hover:bg-jfb-noir-doux disabled:opacity-50 transition-colors"
+                  style={{ borderRadius: '2px' }}
                 >
-                  {loading ? '...' : mode === 'login' ? 'Se connecter' : 'Créer le compte'}
+                  {loading ? '…' : mode === 'login' ? 'Se connecter' : 'Créer le compte'}
                 </button>
               </form>
             )}
 
-            <p className="mt-3 text-center text-xs text-gray-500">
+            <p className="mt-3 text-center text-xs text-jfb-gris">
               {mode === 'login' ? (
                 <>Pas encore de compte ?{' '}
                   <button onClick={() => { setMode('register'); setError(null) }}
-                    className="text-blue-600 hover:underline">S&apos;inscrire</button></>
+                    className="text-jfb-rose hover:underline">S&apos;inscrire</button></>
               ) : (
                 <>Déjà un compte ?{' '}
                   <button onClick={() => { setMode('login'); setError(null) }}
-                    className="text-blue-600 hover:underline">Se connecter</button></>
+                    className="text-jfb-rose hover:underline">Se connecter</button></>
               )}
             </p>
           </div>

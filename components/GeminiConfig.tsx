@@ -2,8 +2,7 @@
 import { useState } from 'react'
 import { GeminiVoice, GeminiSpeakerProfile } from '@/types/dialogue'
 import { Speaker } from '@/types/dialogue'
-
-const SPEAKER_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B']
+import { SPEAKER_COLORS } from '@/lib/voices'
 
 const STYLES = [
   { value: '', label: 'Neutre (par défaut)' },

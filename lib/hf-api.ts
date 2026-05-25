@@ -10,19 +10,24 @@ export async function fetchVoices() {
 
 // Via Vercel proxy — pour dialogues courts (< 60 répliques)
 export async function callHFSpace({
-  script, speakers, silence_ms, item_title, onProgress,
+  script, speakers, silence_ms, item_title, locale, token, onProgress,
 }: {
   script: string
   speakers: Speaker[]
   silence_ms: number
   item_title: string
+  locale?: string
+  token?: string           // JWT Supabase pour associer le dialogue à l'utilisateur
   onProgress?: (msg: string) => void
 }): Promise<GenerateResult> {
   onProgress?.('Connexion au serveur TTS...')
   const res = await fetch('/api/generate', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ script, speakers, silence_ms, item_title }),
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ script, speakers, silence_ms, item_title, locale }),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Erreur serveur' }))

@@ -41,14 +41,20 @@ export default function ConfigPage() {
   }, [geminiVoices.length, dispatch])
 
   // Sync voix des locuteurs quand locale change
+  // Ne remplace la voix d'un locuteur que si elle n'est plus disponible dans la nouvelle locale
   useEffect(() => {
     const available = voices[locale]?.voices ?? []
     if (!available.length) return
+    const availableIds = new Set(available.map(v => v.id))
+    const needsUpdate = speakers.some(s => !availableIds.has(s.voice))
+    if (!needsUpdate) return
     dispatch({
       type: 'SET_SPEAKERS',
       payload: speakers.map((s, i) => ({
         ...s,
-        voice: available[i % available.length]?.id ?? s.voice,
+        voice: availableIds.has(s.voice)
+          ? s.voice
+          : (available[i % available.length]?.id ?? s.voice),
       })),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -139,4 +139,5 @@ Génère maintenant le dialogue. Format strict : une réplique par ligne, préfi
       return NextResponse.json({ error: msg || 'Erreur inconnue' }, { status: 500 })
     }
   }
+  return NextResponse.json({ error: 'Erreur inattendue.' }, { status: 500 })
 }

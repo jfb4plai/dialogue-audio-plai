@@ -4,7 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useWizard } from '@/lib/wizard-context'
 import ScriptEditor from '@/components/ScriptEditor'
 import ScriptGenerator from '@/components/ScriptGenerator'
-import { callHFSpace } from '@/lib/hf-api'
+import GenerateButton from '@/components/GenerateButton'
+import { callHFSpace, callHFSpaceDirect } from '@/lib/hf-api'
+import { getSupabase } from '@/lib/supabase'
 import { GenerateResult } from '@/types/dialogue'
 
 type Source = 'ai-form' | 'ai-file' | 'manual'
@@ -30,7 +32,6 @@ export default function ScriptPage() {
   const { mode, locale, engine, speakers, script, geminiProfiles, silenceMs, ambient, ambientIntensity, voices } = state
 
   const [source, setSource] = useState<Source>('ai-form')
-  const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // File upload state (source = 'ai-file')
@@ -76,65 +77,91 @@ export default function ScriptPage() {
     }
   }
 
-  // Génération audio
+  // Récupère le JWT Supabase pour associer le dialogue à l'utilisateur connecté
+  const getAuthToken = async (): Promise<string | undefined> => {
+    try {
+      const sb = getSupabase()
+      if (!sb) return undefined
+      const { data: { session } } = await sb.auth.getSession()
+      return session?.access_token ?? undefined
+    } catch {
+      return undefined
+    }
+  }
+
+  // Génération audio — les erreurs remontent à GenerateButton
   const handleGenerate = async () => {
     if (!script.trim() || speakers.length < 2) return
-    setGenerating(true)
     setError(null)
-    try {
-      let res: GenerateResult
-      if (engine === 'gemini') {
-        const r = await fetch('/api/generate-gemini', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            script,
-            locale,
-            speakers: geminiProfiles.map(p => ({
-              label: p.label,
-              voice: p.voice,
-              name: p.name,
-              age: p.age,
-              role: p.role,
-              native_language: p.nativeLanguage,
-              personality: p.personality,
-              style: p.style,
-            })),
-            ambient,
-            ambient_intensity: ambientIntensity,
-            item_title: `${mode} ${locale}`,
-          }),
-        })
-        const data = await r.json()
-        if (!r.ok) throw new Error(data.error ?? `Erreur Gemini ${r.status}`)
-        res = data
-      } else {
-        const availableVoices = voices[locale]?.voices ?? []
-        const enrichedSpeakers = speakers.map(sp => {
-          const voiceInfo = availableVoices.find(v => v.id === sp.voice)
-          return {
-            ...sp,
-            length_scale: voiceInfo?.length_scale ?? 1.0,
-            engine: voiceInfo?.engine ?? (sp.voice.includes('Neural') ? 'edge-tts' : 'piper'),
-          }
-        })
-        res = await callHFSpace({
+    const token = await getAuthToken()
+
+    let res: GenerateResult
+    if (engine === 'gemini') {
+      const r = await fetch('/api/generate-gemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          script,
+          locale,
+          speakers: geminiProfiles.map(p => ({
+            label: p.label,
+            voice: p.voice,
+            name: p.name,
+            age: p.age,
+            role: p.role,
+            native_language: p.nativeLanguage,
+            personality: p.personality,
+            style: p.style,
+          })),
+          ambient,
+          ambient_intensity: ambientIntensity,
+          item_title: `${mode} ${locale}`,
+        }),
+      })
+      const data = await r.json()
+      if (!r.ok) throw new Error(data.error ?? `Erreur Gemini ${r.status}`)
+      res = data
+    } else {
+      const availableVoices = voices[locale]?.voices ?? []
+      const enrichedSpeakers = speakers.map(sp => {
+        const voiceInfo = availableVoices.find(v => v.id === sp.voice)
+        return {
+          ...sp,
+          length_scale: voiceInfo?.length_scale ?? 1.0,
+          engine: voiceInfo?.engine ?? (sp.voice.includes('Neural') ? 'edge-tts' : 'piper'),
+        }
+      })
+
+      // Podcast : appel direct au HF Space (contourne le timeout Vercel 60s)
+      // Dialogue : via proxy Vercel /api/generate
+      if (mode === 'podcast') {
+        res = await callHFSpaceDirect({
           script,
           speakers: enrichedSpeakers,
           silence_ms: silenceMs,
           item_title: `${mode} ${locale}`,
         })
+      } else {
+        res = await callHFSpace({
+          script,
+          speakers: enrichedSpeakers,
+          silence_ms: silenceMs,
+          item_title: `${mode} ${locale}`,
+          locale,
+          token,
+        })
       }
-      dispatch({ type: 'SET_RESULT', payload: res })
-      router.push('/studio/result')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur inconnue')
-    } finally {
-      setGenerating(false)
     }
+
+    // Stocker generated_at pour détecter les recharges post-génération (délai Internet Archive)
+    dispatch({ type: 'SET_RESULT', payload: { ...res, generated_at: new Date().toISOString() } })
+    router.push('/studio/result')
   }
 
-  const canGenerate = script.trim().length > 0 && speakers.length >= 2 && !generating
+  const canGenerate = script.trim().length > 0 && speakers.length >= 2
 
   if (!isHydrated || !mode) return null
 
@@ -151,7 +178,7 @@ export default function ScriptPage() {
         <div>
           <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Source du script</div>
           <div className="flex flex-col sm:flex-row gap-2">
-            {mode !== 'podcast' && (
+            {mode !== 'podcast' ? (
               <button
                 onClick={() => setSource('ai-form')}
                 className={`flex-1 py-2.5 px-3 text-sm font-medium border text-left transition-colors ${source === 'ai-form' ? 'bg-jfb-noir text-white border-jfb-noir' : 'bg-white text-jfb-gris border-jfb-bordure hover:border-jfb-noir'}`}
@@ -160,6 +187,11 @@ export default function ScriptPage() {
                 Générer avec l&apos;IA
                 <span className="block text-[10px] opacity-70 font-normal">Formulaire guidé</span>
               </button>
+            ) : (
+              <div className="flex-1 py-2.5 px-3 text-sm border border-jfb-bordure bg-jfb-subtil text-jfb-gris-cl" style={{ borderRadius: '2px' }}>
+                Formulaire guidé
+                <span className="block text-[10px] font-normal">Non disponible en mode Podcast — utilisez un document ou saisissez directement</span>
+              </div>
             )}
             <button
               onClick={() => setSource('ai-file')}
@@ -181,7 +213,7 @@ export default function ScriptPage() {
         </div>
 
         {/* Source : formulaire IA */}
-        {source === 'ai-form' && (
+        {source === 'ai-form' && mode !== 'podcast' && (
           <ScriptGenerator
             locale={locale}
             speakerCount={speakers.length}
@@ -268,15 +300,8 @@ export default function ScriptPage() {
           </div>
         )}
 
-        {/* Bouton génération audio */}
-        <button
-          onClick={handleGenerate}
-          disabled={!canGenerate}
-          className="w-full py-3 text-sm font-semibold bg-jfb-rose text-white hover:bg-jfb-rose-dk disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          style={{ borderRadius: '2px' }}
-        >
-          {generating ? 'Génération audio en cours…' : 'Générer l\'audio →'}
-        </button>
+        {/* Bouton génération audio avec feedback progressif */}
+        <GenerateButton onGenerate={handleGenerate} disabled={!canGenerate} />
       </div>
     </main>
   )

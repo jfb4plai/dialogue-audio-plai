@@ -41,7 +41,6 @@ export default function SpeakerConfig({ speakers, availableVoices, onChange }: P
 
   return (
     <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">Locuteurs</label>
       <div className="space-y-2">
         {speakers.map((spk, i) => (
           <div key={i} className="flex items-center gap-2">

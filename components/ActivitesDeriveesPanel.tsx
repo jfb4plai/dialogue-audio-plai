@@ -81,6 +81,20 @@ function makeTrous(lines: { label: string; content: string }[], every: number): 
   })
 }
 
+function printElement(id: string) {
+  const el = document.getElementById(id)
+  if (!el) return
+  const win = window.open('', '_blank', 'width=800,height=600')
+  if (!win) return
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Impression</title>
+    <style>body{font-family:sans-serif;padding:24px;font-size:14px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 10px}th{background:#f5f5f5}</style>
+    </head><body>${el.innerHTML}</body></html>`)
+  win.document.close()
+  win.focus()
+  win.print()
+  win.close()
+}
+
 export default function ActivitesDeriveesPanel({ script, locale, speakers }: Props) {
   const [activeTab, setActiveTab] = useState<'lexique' | 'trous' | 'quiz' | null>(null)
   const [every, setEvery] = useState(5)
@@ -183,13 +197,14 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
           <div className="flex justify-between items-center mb-3">
             <p className="text-xs text-jfb-gris">{lexique.length} mots clés extraits</p>
             <button
-              onClick={() => window.print()}
+              onClick={() => printElement('lexique-print')}
               className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige"
               style={{ borderRadius: '2px' }}
             >
               Imprimer
             </button>
           </div>
+          <div id="lexique-print">
           {lexique.length === 0 ? (
             <p className="text-sm text-jfb-gris">Aucun mot clé détecté dans ce script.</p>
           ) : (
@@ -210,6 +225,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
               </tbody>
             </table>
           )}
+          </div>
         </div>
       )}
 
@@ -270,7 +286,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
             </p>
           )}
           {quizQuestions && (
-            <>
+            <div id="quiz-print">
               <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                 <p className="text-xs text-jfb-gris">5 questions de compréhension</p>
                 <div className="flex gap-2">
@@ -282,7 +298,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
                     {showAnswers ? 'Masquer corrigé' : 'Afficher corrigé'}
                   </button>
                   <button
-                    onClick={() => window.print()}
+                    onClick={() => printElement('quiz-print')}
                     className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige"
                     style={{ borderRadius: '2px' }}
                   >
@@ -317,7 +333,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
               >
                 Régénérer les questions
               </button>
-            </>
+            </div>
           )}
         </div>
       )}

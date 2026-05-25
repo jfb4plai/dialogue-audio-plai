@@ -36,6 +36,7 @@ export interface GenerateResult {
   qr_base64: string
   duration_seconds: number
   segments: Segment[]
+  generated_at?: string // ISO timestamp set client-side at generation time
 }
 
 export interface GeminiVoice {

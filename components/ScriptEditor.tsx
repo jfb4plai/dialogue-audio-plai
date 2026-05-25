@@ -63,7 +63,7 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  // Translate script via LibreTranslate
+  // Translate script via DeepL
   const handleTranslate = async () => {
     const targetCode = LANG_CODES[targetLocale]
     if (!targetCode || targetCode === 'fr') return
@@ -91,15 +91,16 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-1">
-        <label className="block text-sm font-medium text-gray-700">
-          Script <span className="text-gray-400 font-normal">(format : A: texte / B: texte)</span>
+        <label className="block text-sm font-medium text-jfb-noir">
+          Script <span className="text-jfb-gris font-normal">(format : A: texte / B: texte)</span>
         </label>
         <div className="flex gap-2">
           {/* Word import */}
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="text-xs px-2 py-1 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+            className="text-xs px-2 py-1 border border-jfb-bordure text-jfb-gris hover:border-jfb-noir hover:text-jfb-noir transition-colors"
+            style={{ borderRadius: '2px' }}
           >
             Importer Word
           </button>
@@ -111,7 +112,8 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
               type="button"
               onClick={handleTranslate}
               disabled={translating}
-              className="text-xs px-2 py-1 border border-blue-400 rounded-lg text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+              className="text-xs px-2 py-1 border border-jfb-rose text-jfb-rose hover:bg-jfb-beige disabled:opacity-50 transition-colors"
+              style={{ borderRadius: '2px' }}
             >
               {translating ? 'Traduction...' : `Traduire → ${targetCode}`}
             </button>
@@ -138,22 +140,22 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
       )}
 
       {canTranslate && (
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-jfb-gris-cl">
           Traduction via DeepL · disponible dans la limite du crédit — en cas de dépassement, contacter le Pôle.
         </p>
       )}
       {translateError && (
-        <p className="mt-1 text-xs text-red-500">{translateError}</p>
+        <p className="mt-1 text-xs text-red-600 bg-red-50 border border-red-200 px-2 py-1" style={{ borderRadius: '2px' }}>{translateError}</p>
       )}
 
       {/* Colored preview */}
       {replyCount > 0 && (
-        <div className="mt-2 border border-gray-100 rounded-lg p-3 bg-white text-sm space-y-1">
+        <div className="mt-2 border border-jfb-bordure p-3 bg-white text-sm space-y-1" style={{ borderRadius: '2px' }}>
           {parsedLines.map(l =>
             l.label ? (
               <div key={l.key} className="flex gap-2">
                 <span className="font-bold" style={{ color: l.color }}>{l.label}:</span>
-                <span className="text-gray-800">{l.text}</span>
+                <span className="text-jfb-noir">{l.text}</span>
               </div>
             ) : null
           )}
@@ -161,7 +163,7 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
       )}
 
       <div className="mt-1 flex items-center justify-between">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-jfb-gris">
           {replyCount} réplique{replyCount > 1 ? 's' : ''} · {speakersFound.size} locuteur{speakersFound.size > 1 ? 's' : ''} · ~{estSecs}s estimées
         </p>
         {limitWarning && (
