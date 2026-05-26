@@ -106,10 +106,10 @@ export async function POST(req: NextRequest) {
 RÈGLES ABSOLUES DE FORMAT :
 1. Chaque réplique commence par une lettre majuscule suivie de ": " — lettres : ${letters.join(', ')}
 2. ZÉRO markdown : pas de **, *, #, _, tirets de liste
-3. ZÉRO introduction, titre, commentaire, conclusion
-4. ZÉRO numérotation
-5. Uniquement les répliques, rien d'autre
-6. LANGUE STRICTE : TOUT le texte en ${langue} — aucun mot dans une autre langue
+3. ZÉRO titre, commentaire hors-script, numérotation
+4. Uniquement les répliques, rien d'autre
+5. LANGUE STRICTE : TOUT le texte en ${langue} — aucun mot dans une autre langue
+6. CONCLUSION OBLIGATOIRE : les 2 dernières répliques closent naturellement l'échange — ne jamais s'arrêter en plein milieu d'une idée
 
 EXEMPLE :
 A: Goedemorgen, kan ik u helpen?
@@ -118,7 +118,7 @@ B: Ja, graag. Ik zoek een tafel voor twee personen.`
   const scriptInstructions = `Sur la base de ce contenu, génère un ${mode} en ${langue}.
 Locuteurs : ${locuteurs}${profilesNote}
 Nombre de répliques : environ ${mode === 'podcast' ? 40 : 20}
-Le ${mode} doit rester fidèle aux idées du document tout en étant naturel et pédagogique.
+Le ${mode} doit couvrir les idées principales du document de façon naturelle et pédagogique, avec une conclusion construite.
 Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').join(' ou ')} uniquement.`
 
   // Construit le contenu du message selon le type de fichier
@@ -165,7 +165,7 @@ Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').jo
     try {
       const message = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
+        max_tokens: 4096,
         messages: [{ role: 'user', content: messageContent }],
         system: systemPrompt,
       })
