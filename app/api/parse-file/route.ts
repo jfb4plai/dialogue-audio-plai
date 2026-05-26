@@ -129,7 +129,7 @@ B: Ja, graag. Ik zoek een tafel voor twee personen.`}`
 
   const scriptInstructions = `Sur la base de ce contenu, génère un ${mode} en ${langue}.
 Locuteurs : ${locuteurs}${profilesNote}
-Nombre de répliques : environ ${isPodcast ? '40 à 50 (réparties en épisodes de ~15 répliques)' : '20'}
+Nombre de répliques : environ ${isPodcast ? '30 à 36 maximum (épisodes de 12 à 15 répliques, 2 à 3 épisodes selon le contenu)' : '20'}
 Le ${mode} doit couvrir les idées principales du document de façon naturelle et pédagogique, avec une conclusion construite.
 Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').join(' ou ')} uniquement.${isPodcast ? '\nStructure impérative : marqueurs [ÉPISODE N] avant chaque bloc.' : ''}`
 
@@ -184,7 +184,7 @@ Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').jo
       const raw = message.content[0].type === 'text' ? message.content[0].text : ''
       const clean = raw.split('\n')
         .map(l => l.trim())
-        .filter(l => /^[A-D]:\s/.test(l))
+        .filter(l => /^[A-D]:\s/.test(l) || /^\[.{1,20}\d\s*\]$/.test(l))
         .map(l => l.replace(/\*\*/g, '').replace(/\*/g, '').replace(/_/g, ''))
         .join('\n')
       if (!clean) {
