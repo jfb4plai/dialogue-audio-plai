@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 async function getUserId(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get('authorization')
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-PLAI-Secret': process.env.HF_SPACE_SECRET ?? '' },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(58_000),
+      signal: AbortSignal.timeout(280_000),
     })
     const text = await res.text()
     try {
