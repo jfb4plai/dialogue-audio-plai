@@ -4,11 +4,11 @@ import Anthropic from '@anthropic-ai/sdk'
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const rateMap = new Map<string, { count: number; resetAt: number }>()
-const MAX_PER_HOUR = 20
+const MAX_PER_HOUR = 10
 const HOUR_MS = 60 * 60 * 1000
 
 const LOCALE_LABELS: Record<string, string> = {
-  nl_BE: 'néerlandais',
+  nl_BE: 'néerlandais de Belgique',
   nl_NL: 'néerlandais',
   fr_FR: 'français',
   fr_BE: 'français',
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   const entry = rateMap.get(ip)
   if (entry && now < entry.resetAt) {
     if (entry.count >= MAX_PER_HOUR) {
-      return NextResponse.json({ error: 'Limite atteinte : 20 générations par heure.' }, { status: 429 })
+      return NextResponse.json({ error: 'Limite atteinte : 10 générations par heure.' }, { status: 429 })
     }
     entry.count++
   } else {
@@ -35,45 +35,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Clé API non configurée.' }, { status: 500 })
   }
 
-  const { script, locale = 'nl_BE', question_lang = 'fr' } = await req.json()
+  const { script, locale = 'nl_BE' } = await req.json()
   if (!script?.trim()) {
     return NextResponse.json({ error: 'Script manquant.' }, { status: 400 })
   }
 
   const langue = LOCALE_LABELS[locale] ?? 'la langue du dialogue'
-  const questionLangLabel = question_lang === 'locale' ? langue : 'français'
 
-  const systemPrompt = `Tu es un assistant pédagogique. Tu génères des questions de compréhension Vrai/Faux à partir de dialogues audio pour des apprenants en langue étrangère.`
-
-  const userPrompt = `À partir de ce dialogue en ${langue}, génère exactement 5 questions de compréhension de type Vrai/Faux.
+  const userPrompt = `À partir de ce dialogue en ${langue}, sélectionne 8 à 12 mots ou expressions-clés utiles pour une activité lexicale pédagogique (ni trop fréquents, ni trop rares — évite les mots grammaticaux).
 
 DIALOGUE :
 ${script}
 
-RÈGLES :
-- Les questions portent sur des faits précis du dialogue (pas d'interprétation)
-- Chaque question est formulée en ${questionLangLabel}
-- Réponse : toujours "Vrai" ou "Faux" (en français, dans le champ "answer")
-- Justification : courte phrase citant ou paraphrasant le dialogue, en ${questionLangLabel}
+Pour chaque mot/expression :
+- "word" : le mot tel qu'il apparaît dans le dialogue (forme exacte)
+- "translation" : traduction courte en français
+- "example" : phrase exacte du dialogue où le mot apparaît (citation complète)
+- "reuse" : phrase courte en ${langue} avec "___" à la place du mot (phrase de réemploi à compléter par l'élève — différente de l'exemple)
 
-FORMAT DE RÉPONSE — JSON strict, rien d'autre :
-[
-  {"question": "...", "answer": "Vrai", "justification": "..."},
-  {"question": "...", "answer": "Faux", "justification": "..."}
-]`
+FORMAT JSON strict, rien d'autre :
+[{"word":"...","translation":"...","example":"...","reuse":"..."}]`
 
   try {
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [{ role: 'user', content: userPrompt }],
-      system: systemPrompt,
+      system: 'Tu es un assistant pédagogique expert en didactique des langues étrangères. Tu génères des activités lexicales structurées conformes aux pratiques de contextualisation recommandées en didactique du FLE/LVE.',
     })
     const raw = message.content[0].type === 'text' ? message.content[0].text : ''
     const jsonMatch = raw.match(/\[[\s\S]*\]/)
     if (!jsonMatch) return NextResponse.json({ error: 'Format invalide. Réessayez.' }, { status: 500 })
-    const questions = JSON.parse(jsonMatch[0])
-    return NextResponse.json({ questions })
+    const items = JSON.parse(jsonMatch[0])
+    return NextResponse.json({ items })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
     return NextResponse.json({ error: msg }, { status: 500 })

@@ -8,6 +8,13 @@ interface QuizQuestion {
   justification: string
 }
 
+interface LexiqueItem {
+  word: string
+  translation: string
+  example: string
+  reuse: string
+}
+
 interface Props {
   script: string
   locale: string
@@ -38,27 +45,22 @@ const STOPWORDS = new Set([
   'il','i','le','di','in','con','per','sono','ho','che','mi','ti','si','ci','vi','lo','li',
 ])
 
+const TRUE_FALSE_LABELS: Record<string, [string, string]> = {
+  nl_BE: ['Waar', 'Niet waar'],
+  nl_NL: ['Waar', 'Niet waar'],
+  de_DE: ['Wahr', 'Falsch'],
+  en_GB: ['True', 'False'],
+  es_ES: ['Verdadero', 'Falso'],
+  it_IT: ['Vero', 'Falso'],
+  fr_FR: ['Vrai', 'Faux'],
+  fr_BE: ['Vrai', 'Faux'],
+}
+
 function parseLines(script: string): { label: string; content: string }[] {
   return script.split('\n')
     .map(l => l.trim())
     .filter(l => /^[A-D]:\s/.test(l))
     .map(l => ({ label: l[0], content: l.slice(3).trim() }))
-}
-
-function extractLexique(lines: { label: string; content: string }[]): { word: string; example: string }[] {
-  const seen = new Map<string, string>()
-  for (const { content } of lines) {
-    const tokens = content.split(/[\s,;:.!?'"«»()\[\]—–]+/).filter(Boolean)
-    for (const raw of tokens) {
-      const word = raw.toLowerCase().replace(/[^a-zàáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿœ]/gi, '')
-      if (word.length < 3) continue
-      if (STOPWORDS.has(word)) continue
-      if (!seen.has(word)) seen.set(word, content)
-    }
-  }
-  return Array.from(seen.entries())
-    .map(([word, example]) => ({ word, example }))
-    .sort((a, b) => a.word.localeCompare(b.word))
 }
 
 function makeTrous(lines: { label: string; content: string }[], every: number): { label: string; content: string; masked: string }[] {
@@ -81,31 +83,40 @@ function makeTrous(lines: { label: string; content: string }[], every: number): 
   })
 }
 
-function printElement(id: string) {
-  const el = document.getElementById(id)
-  if (!el) return
-  const win = window.open('', '_blank', 'width=800,height=600')
-  if (!win) return
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Impression</title>
-    <style>body{font-family:sans-serif;padding:24px;font-size:14px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 10px}th{background:#f5f5f5}</style>
-    </head><body>${el.innerHTML}</body></html>`)
-  win.document.close()
-  win.focus()
-  win.print()
-  win.close()
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 export default function ActivitesDeriveesPanel({ script, locale, speakers }: Props) {
   const [activeTab, setActiveTab] = useState<'lexique' | 'trous' | 'quiz' | null>(null)
+
+  // Texte à trous
   const [every, setEvery] = useState(5)
+  const [maxLines, setMaxLines] = useState(0)
+
+  // Vrai / Faux
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[] | null>(null)
   const [quizLoading, setQuizLoading] = useState(false)
   const [quizError, setQuizError] = useState<string | null>(null)
   const [showAnswers, setShowAnswers] = useState(false)
+  const [quizLang, setQuizLang] = useState<'fr' | 'locale'>('fr')
+
+  // Lexique
+  const [lexiqueItems, setLexiqueItems] = useState<LexiqueItem[] | null>(null)
+  const [lexiqueLoading, setLexiqueLoading] = useState(false)
+  const [lexiqueError, setLexiqueError] = useState<string | null>(null)
 
   const lines = parseLines(script)
-  const lexique = extractLexique(lines)
-  const trousLines = makeTrous(lines, every)
+  const displayedLines = maxLines > 0 ? lines.slice(0, maxLines) : lines
+  const trousLines = makeTrous(displayedLines, every)
+  const [trueLabel, falseLabel] = quizLang === 'locale'
+    ? (TRUE_FALSE_LABELS[locale] ?? ['Vrai', 'Faux'])
+    : ['Vrai', 'Faux']
 
   const loadQuiz = async () => {
     if (quizLoading) return
@@ -116,7 +127,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
       const res = await fetch('/api/generate-quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ script, locale }),
+        body: JSON.stringify({ script, locale, question_lang: quizLang }),
       })
       const data = await res.json()
       if (data.error) { setQuizError(data.error); return }
@@ -128,11 +139,31 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
     }
   }
 
-  const exportDocx = async () => {
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx')
+  const loadLexique = async () => {
+    if (lexiqueLoading) return
+    setLexiqueLoading(true)
+    setLexiqueError(null)
+    setLexiqueItems(null)
+    try {
+      const res = await fetch('/api/generate-lexique', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ script, locale }),
+      })
+      const data = await res.json()
+      if (data.error) { setLexiqueError(data.error); return }
+      setLexiqueItems(data.items)
+    } catch {
+      setLexiqueError('Erreur réseau.')
+    } finally {
+      setLexiqueLoading(false)
+    }
+  }
 
+  const exportTrousDocx = async () => {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx')
     const children = [
-      new Paragraph({ text: 'Texte à trous — élève', heading: HeadingLevel.HEADING_1 }),
+      new Paragraph({ text: 'Texte à trous', heading: HeadingLevel.HEADING_1 }),
       new Paragraph({ text: '' }),
     ]
     for (const { label, masked } of trousLines) {
@@ -143,8 +174,8 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
         ],
       }))
     }
-    children.push(new Paragraph({ children: [new TextRun({ text: '', break: 1 })], pageBreakBefore: true }))
-    children.push(new Paragraph({ text: 'Corrigé — enseignant', heading: HeadingLevel.HEADING_1 }))
+    children.push(new Paragraph({ children: [new TextRun({ text: '' })], pageBreakBefore: true }))
+    children.push(new Paragraph({ text: 'Corrigé', heading: HeadingLevel.HEADING_1 }))
     children.push(new Paragraph({ text: '' }))
     for (const { label, content } of trousLines) {
       children.push(new Paragraph({
@@ -154,15 +185,84 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
         ],
       }))
     }
-
     const doc = new Document({ sections: [{ children }] })
-    const blob = await Packer.toBlob(doc)
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'texte-a-trous.docx'
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(await Packer.toBlob(doc), 'texte-a-trous.docx')
+  }
+
+  const exportQuizDocx = async () => {
+    if (!quizQuestions) return
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx')
+    const children = [
+      new Paragraph({ text: 'Vrai / Faux', heading: HeadingLevel.HEADING_1 }),
+      new Paragraph({ text: '' }),
+    ]
+    quizQuestions.forEach((q, i) => {
+      children.push(new Paragraph({ children: [new TextRun({ text: `${i + 1}. ${q.question}` })] }))
+      children.push(new Paragraph({ children: [new TextRun({ text: `\u25CB ${trueLabel}     \u25CB ${falseLabel}` })] }))
+      children.push(new Paragraph({ text: '' }))
+    })
+    children.push(new Paragraph({ children: [new TextRun({ text: '' })], pageBreakBefore: true }))
+    children.push(new Paragraph({ text: 'Corrigé', heading: HeadingLevel.HEADING_1 }))
+    children.push(new Paragraph({ text: '' }))
+    quizQuestions.forEach((q, i) => {
+      const ans = q.answer === 'Vrai' ? trueLabel : falseLabel
+      children.push(new Paragraph({
+        children: [new TextRun({ text: `${i + 1}. ${q.question}` })],
+      }))
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: `→ ${ans}`, bold: true }),
+          new TextRun({ text: `  — ${q.justification}`, italics: true }),
+        ],
+      }))
+      children.push(new Paragraph({ text: '' }))
+    })
+    const doc = new Document({ sections: [{ children }] })
+    downloadBlob(await Packer.toBlob(doc), 'vrai-faux.docx')
+  }
+
+  const exportLexiqueDocx = async () => {
+    if (!lexiqueItems) return
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle } = await import('docx')
+    const bs = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' }
+    const borders = { top: bs, bottom: bs, left: bs, right: bs }
+
+    const hCell = (text: string) => new TableCell({
+      children: [new Paragraph({ children: [new TextRun({ text, bold: true })] })],
+      borders,
+    })
+    const cell = (text: string, italic = false) => new TableCell({
+      children: [new Paragraph({ children: [new TextRun({ text, italics: italic })] })],
+      borders,
+    })
+
+    // Fiche élève : mot | traduction | réemploi (avec ___)
+    const studentRows = [
+      new TableRow({ children: [hCell('Mot'), hCell('Traduction'), hCell('Réemploi (complète le blanc)')] }),
+      ...lexiqueItems.map(item => new TableRow({
+        children: [cell(item.word), cell(item.translation), cell(item.reuse)],
+      })),
+    ]
+
+    // Corrigé enseignant : mot | traduction | exemple | réemploi
+    const teacherRows = [
+      new TableRow({ children: [hCell('Mot'), hCell('Traduction'), hCell('Exemple du dialogue'), hCell('Réemploi')] }),
+      ...lexiqueItems.map(item => new TableRow({
+        children: [cell(item.word), cell(item.translation), cell(item.example, true), cell(item.reuse)],
+      })),
+    ]
+
+    const children = [
+      new Paragraph({ text: 'Lexique — fiche élève', heading: HeadingLevel.HEADING_1 }),
+      new Paragraph({ text: '' }),
+      new Table({ rows: studentRows, width: { size: 100, type: WidthType.PERCENTAGE } }),
+      new Paragraph({ children: [new TextRun({ text: '' })], pageBreakBefore: true }),
+      new Paragraph({ text: 'Lexique — corrigé enseignant', heading: HeadingLevel.HEADING_1 }),
+      new Paragraph({ text: '' }),
+      new Table({ rows: teacherRows, width: { size: 100, type: WidthType.PERCENTAGE } }),
+    ]
+    const doc = new Document({ sections: [{ children }] })
+    downloadBlob(await Packer.toBlob(doc), 'lexique.docx')
   }
 
   const tabBtn = (tab: typeof activeTab, label: string, onClick?: () => void) => (
@@ -185,47 +285,61 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
       <div className="px-5 py-4 border-b border-jfb-bordure bg-jfb-subtil">
         <h2 className="text-sm font-bold text-jfb-noir mb-3">Activités dérivées</h2>
         <div className="flex gap-2 flex-wrap">
-          {tabBtn('lexique', 'Lexique')}
+          {tabBtn('lexique', 'Lexique', loadLexique)}
           {tabBtn('trous', 'Texte à trous')}
-          {tabBtn('quiz', 'Vrai / Faux', loadQuiz)}
+          {tabBtn('quiz', 'Vrai / Faux')}
         </div>
       </div>
 
       {/* LEXIQUE */}
       {activeTab === 'lexique' && (
         <div className="p-5">
-          <div className="flex justify-between items-center mb-3">
-            <p className="text-xs text-jfb-gris">{lexique.length} mots clés extraits</p>
-            <button
-              onClick={() => printElement('lexique-print')}
-              className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige"
-              style={{ borderRadius: '2px' }}
-            >
-              Imprimer
-            </button>
-          </div>
-          <div id="lexique-print">
-          {lexique.length === 0 ? (
-            <p className="text-sm text-jfb-gris">Aucun mot clé détecté dans ce script.</p>
-          ) : (
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-jfb-beige">
-                  <th className="text-left px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir w-1/3">Mot</th>
-                  <th className="text-left px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">Exemple dans le dialogue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lexique.map(({ word, example }) => (
-                  <tr key={word}>
-                    <td className="px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">{word}</td>
-                    <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris text-xs italic">«&#8201;{example}&#8201;»</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {lexiqueLoading && <p className="text-sm text-jfb-gris">Génération du lexique en cours…</p>}
+          {lexiqueError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2" style={{ borderRadius: '2px' }}>
+              {lexiqueError}
+            </p>
           )}
-          </div>
+          {lexiqueItems && (
+            <>
+              <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+                <p className="text-xs text-jfb-gris">{lexiqueItems.length} mots — mot · traduction · exemple · réemploi</p>
+                <div className="flex gap-2">
+                  <button onClick={exportLexiqueDocx}
+                    className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige"
+                    style={{ borderRadius: '2px' }}>
+                    Télécharger .docx
+                  </button>
+                  <button onClick={() => { setLexiqueItems(null); loadLexique() }}
+                    className="text-xs text-jfb-gris underline hover:text-jfb-noir">
+                    Régénérer
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-jfb-beige">
+                      <th className="text-left px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">Mot</th>
+                      <th className="text-left px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">Traduction</th>
+                      <th className="text-left px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">Exemple du dialogue</th>
+                      <th className="text-left px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">Réemploi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lexiqueItems.map((item, i) => (
+                      <tr key={i} className={i % 2 === 0 ? '' : 'bg-jfb-subtil'}>
+                        <td className="px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">{item.word}</td>
+                        <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris">{item.translation}</td>
+                        <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris text-xs italic">«&#8201;{item.example}&#8201;»</td>
+                        <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris text-xs">{item.reuse}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -235,23 +349,27 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
           <div className="flex items-center gap-4 mb-4 flex-wrap">
             <div className="flex items-center gap-2">
               <label className="text-xs text-jfb-gris">Difficulté :</label>
-              <select
-                value={every}
-                onChange={e => setEvery(Number(e.target.value))}
-                className="text-sm border border-jfb-bordure px-2 py-1 bg-white"
-                style={{ borderRadius: '2px' }}
-              >
+              <select value={every} onChange={e => setEvery(Number(e.target.value))}
+                className="text-sm border border-jfb-bordure px-2 py-1 bg-white" style={{ borderRadius: '2px' }}>
                 <option value={3}>1 mot sur 3 (difficile)</option>
                 <option value={4}>1 mot sur 4</option>
                 <option value={5}>1 mot sur 5 (standard)</option>
                 <option value={7}>1 mot sur 7 (facile)</option>
               </select>
             </div>
-            <button
-              onClick={exportDocx}
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-jfb-gris">Répliques :</label>
+              <select value={maxLines} onChange={e => setMaxLines(Number(e.target.value))}
+                className="text-sm border border-jfb-bordure px-2 py-1 bg-white" style={{ borderRadius: '2px' }}>
+                <option value={0}>Tout ({lines.length} répliques)</option>
+                <option value={10}>10 premières</option>
+                <option value={15}>15 premières</option>
+                <option value={20}>20 premières</option>
+              </select>
+            </div>
+            <button onClick={exportTrousDocx}
               className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige ml-auto"
-              style={{ borderRadius: '2px' }}
-            >
+              style={{ borderRadius: '2px' }}>
               Télécharger .docx
             </button>
           </div>
@@ -260,10 +378,8 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
               const spk = speakers.find(s => s.label === label)
               return (
                 <div key={i} className="flex gap-2 items-start">
-                  <span
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5"
-                    style={{ backgroundColor: spk?.color ?? '#888' }}
-                  >
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5"
+                    style={{ backgroundColor: spk?.color ?? '#888' }}>
                     {label}
                   </span>
                   <p className="text-jfb-noir leading-relaxed">{masked}</p>
@@ -277,32 +393,53 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
       {/* VRAI / FAUX */}
       {activeTab === 'quiz' && (
         <div className="p-5">
-          {quizLoading && (
-            <p className="text-sm text-jfb-gris">Génération des questions en cours…</p>
+          {/* Langue + actions */}
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <span className="text-xs text-jfb-gris">Questions en :</span>
+            {(['fr', 'locale'] as const).map(lang => (
+              <button key={lang}
+                onClick={() => { setQuizLang(lang); setQuizQuestions(null); setQuizError(null) }}
+                className={`text-xs px-3 py-1 border transition-colors ${
+                  quizLang === lang
+                    ? 'bg-jfb-noir text-white border-jfb-noir'
+                    : 'bg-white text-jfb-noir border-jfb-bordure hover:bg-jfb-beige'
+                }`}
+                style={{ borderRadius: '2px' }}>
+                {lang === 'fr' ? 'Français' : 'Langue cible'}
+              </button>
+            ))}
+          </div>
+
+          {/* Generate button */}
+          {!quizQuestions && !quizLoading && (
+            <button onClick={loadQuiz}
+              className="text-sm px-4 py-2 bg-jfb-noir text-white hover:opacity-90 mb-4"
+              style={{ borderRadius: '2px' }}>
+              Générer les questions
+            </button>
           )}
+
+          {quizLoading && <p className="text-sm text-jfb-gris">Génération des questions en cours…</p>}
           {quizError && (
             <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2" style={{ borderRadius: '2px' }}>
               {quizError}
             </p>
           )}
+
           {quizQuestions && (
-            <div id="quiz-print">
+            <div>
               <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                 <p className="text-xs text-jfb-gris">5 questions de compréhension</p>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowAnswers(v => !v)}
+                  <button onClick={() => setShowAnswers(v => !v)}
                     className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige"
-                    style={{ borderRadius: '2px' }}
-                  >
+                    style={{ borderRadius: '2px' }}>
                     {showAnswers ? 'Masquer corrigé' : 'Afficher corrigé'}
                   </button>
-                  <button
-                    onClick={() => printElement('quiz-print')}
+                  <button onClick={exportQuizDocx}
                     className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige"
-                    style={{ borderRadius: '2px' }}
-                  >
-                    Imprimer
+                    style={{ borderRadius: '2px' }}>
+                    Télécharger .docx
                   </button>
                 </div>
               </div>
@@ -312,25 +449,25 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
                     <p className="text-sm text-jfb-noir mb-2">{i + 1}. {q.question}</p>
                     <div className="flex gap-4 text-sm">
                       <label className="flex items-center gap-1 text-jfb-gris cursor-pointer">
-                        <input type="radio" name={`q${i}`} /> Vrai
+                        <input type="radio" name={`q${i}`} /> {trueLabel}
                       </label>
                       <label className="flex items-center gap-1 text-jfb-gris cursor-pointer">
-                        <input type="radio" name={`q${i}`} /> Faux
+                        <input type="radio" name={`q${i}`} /> {falseLabel}
                       </label>
                     </div>
                     {showAnswers && (
                       <div className="mt-2 bg-jfb-beige px-3 py-2 text-xs" style={{ borderRadius: '2px' }}>
-                        <span className="font-bold text-jfb-noir">{q.answer}</span>
+                        <span className="font-bold text-jfb-noir">
+                          {q.answer === 'Vrai' ? trueLabel : falseLabel}
+                        </span>
                         <span className="text-jfb-gris ml-2">— {q.justification}</span>
                       </div>
                     )}
                   </li>
                 ))}
               </ol>
-              <button
-                onClick={() => { setQuizQuestions(null); loadQuiz() }}
-                className="mt-4 text-xs text-jfb-gris underline hover:text-jfb-noir"
-              >
+              <button onClick={() => { setQuizQuestions(null); loadQuiz() }}
+                className="mt-4 text-xs text-jfb-gris underline hover:text-jfb-noir">
                 Régénérer les questions
               </button>
             </div>
