@@ -103,7 +103,9 @@ Paramètres :
 - Sujet : ${sujet || 'conversation courante'}
 - Registre : ${registre}${niveauNote}${filiereNote}${contexteNote}${vocNote}${profilesNote}
 
-Génère maintenant le dialogue. Format strict : une réplique par ligne, préfixe ${letters.join(': ou ')+': uniquement'}. Tous les locuteurs (${letters.join(', ')}) doivent intervenir de façon équilibrée.`
+Génère maintenant le dialogue. Format strict : une réplique par ligne, préfixe ${letters.join(': ou ')+': uniquement'}. Tous les locuteurs (${letters.join(', ')}) doivent intervenir de façon équilibrée.
+
+La dernière réplique doit conclure naturellement la situation (prise de congé, accord, résolution, clôture) — cohérente avec le sujet, le contexte situationnel et les profils des personnages. Ne pas couper au milieu d'un échange.`
 
   const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 

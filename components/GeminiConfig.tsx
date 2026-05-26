@@ -45,17 +45,28 @@ export default function GeminiConfig({
   return (
     <div className="space-y-4">
 
-      {/* Usage info + mode toggle */}
-      <div className="flex items-center justify-between text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2" style={{ borderRadius: '2px' }}>
-        <span><span className="font-semibold text-jfb-rose">Voix génératives IA</span> · 500/jour · Pas d'inscription requise</span>
-        <button
-          onClick={() => setAdvanced(a => !a)}
-          className="ml-3 flex-shrink-0 text-[10px] px-2 py-0.5 border border-jfb-bordure text-jfb-gris hover:border-jfb-rose hover:text-jfb-rose"
-          style={{ borderRadius: '2px' }}
-        >
-          {advanced ? 'Mode simple' : 'Profils avancés'}
-        </button>
+      {/* Usage info */}
+      <div className="text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2" style={{ borderRadius: '2px' }}>
+        <span><span className="font-semibold text-jfb-rose">Voix génératives IA</span> · 500 générations/jour · Pas d'inscription requise</span>
       </div>
+
+      {/* Profils avancés toggle */}
+      <button
+        onClick={() => setAdvanced(a => !a)}
+        className={`w-full text-left px-4 py-3 border-2 transition-colors ${advanced ? 'border-jfb-rose bg-jfb-beige' : 'border-jfb-bordure bg-white hover:border-jfb-rose'}`}
+        style={{ borderRadius: '2px' }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm font-semibold text-jfb-noir">
+              {advanced ? '▾ Profils avancés activés' : '▸ Profils avancés'}
+            </span>
+            <p className="text-xs text-jfb-gris mt-0.5">
+              Personnalité, rôle, âge, langue maternelle — la voix s'adapte au personnage dans le script IA
+            </p>
+          </div>
+        </div>
+      </button>
 
       {/* Speaker profiles */}
       {speakers.map((spk, i) => {
