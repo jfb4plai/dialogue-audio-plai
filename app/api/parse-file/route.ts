@@ -74,6 +74,17 @@ export async function POST(req: NextRequest) {
   let rawText = ''
   try {
     if (filename.endsWith('.pdf')) {
+      // pdfjs-dist uses DOMMatrix (browser API) — polyfill for Node.js
+      if (typeof (globalThis as Record<string, unknown>).DOMMatrix === 'undefined') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(globalThis as any).DOMMatrix = class DOMMatrix {
+          constructor() {}
+          multiply() { return this }
+          translate() { return this }
+          scale() { return this }
+          rotate() { return this }
+        }
+      }
       // Import dynamique — contourne le chargement des fichiers de test à l'init
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const pdfMod = await import('pdf-parse') as any
