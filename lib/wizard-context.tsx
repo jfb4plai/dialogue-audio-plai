@@ -38,7 +38,7 @@ type Action =
 const initialState: WizardState = {
   mode: null,
   locale: 'nl_BE',
-  engine: 'edge-tts',
+  engine: 'gemini',
   speakers: [
     { label: 'A', voice: 'nl-BE-DenaNeural',   color: SPEAKER_COLORS[0] },
     { label: 'B', voice: 'nl-BE-ArnaudNeural',  color: SPEAKER_COLORS[1] },

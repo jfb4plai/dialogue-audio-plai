@@ -81,8 +81,6 @@ export default function ConfigPage() {
   useEffect(() => {
     if (mode === 'podcast' && engine !== 'gemini') {
       dispatch({ type: 'SET_ENGINE', payload: 'gemini' })
-    } else if (mode === 'dialogue' && engine === 'gemini' && geminiVoices.length === 0) {
-      dispatch({ type: 'SET_ENGINE', payload: 'edge-tts' })
     }
   }, [mode, engine, geminiVoices.length, dispatch])
 
@@ -133,52 +131,6 @@ export default function ConfigPage() {
           <LanguageSelector voices={voices} selected={locale} onChange={l => dispatch({ type: 'SET_LOCALE', payload: l })} />
         </div>
 
-        {/* Moteur — masqué pour podcast (Gemini forcé) */}
-        {!isPodcast && (
-          <div>
-            <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Moteur vocal</div>
-            <div className="flex gap-2 mb-3">
-              <button
-                onClick={() => dispatch({ type: 'SET_ENGINE', payload: 'edge-tts' })}
-                className={`flex-1 py-2 text-sm font-medium border transition-colors ${engine === 'edge-tts' ? 'bg-jfb-noir text-white border-jfb-noir' : 'bg-white text-jfb-gris border-jfb-bordure hover:border-jfb-noir'}`}
-                style={{ borderRadius: '2px' }}
-              >
-                Edge TTS <span className="text-[10px] opacity-70">— sans inscription</span>
-              </button>
-              <button
-                onClick={() => geminiConfigured && dispatch({ type: 'SET_ENGINE', payload: 'gemini' })}
-                disabled={!geminiConfigured}
-                className={`flex-1 py-2 text-sm font-medium border transition-colors ${engine === 'gemini' ? 'bg-jfb-rose text-white border-jfb-rose' : 'bg-white text-jfb-gris border-jfb-bordure hover:border-jfb-rose'} ${!geminiConfigured ? 'opacity-50 cursor-not-allowed' : ''}`}
-                style={{ borderRadius: '2px' }}
-                title={!geminiConfigured ? 'Gemini TTS non configuré sur le serveur' : ''}
-              >
-                Gemini TTS <span className="text-[10px] opacity-70">{geminiConfigured ? '— clé PLAI' : '— non disponible'}</span>
-              </button>
-            </div>
-
-            {/* Tableau comparatif compact */}
-            <div className="text-[11px] text-jfb-gris border border-jfb-bordure bg-jfb-subtil" style={{ borderRadius: '2px' }}>
-              <div className="grid grid-cols-3 border-b border-jfb-bordure">
-                <div className="px-3 py-1.5 font-semibold text-jfb-noir"></div>
-                <div className={`px-3 py-1.5 font-semibold text-center ${engine === 'edge-tts' ? 'text-jfb-noir bg-white' : ''}`}>Edge TTS</div>
-                <div className={`px-3 py-1.5 font-semibold text-center ${engine === 'gemini' ? 'text-jfb-rose bg-white' : ''}`}>Gemini TTS</div>
-              </div>
-              {[
-                ['Voix',           'Neurales Microsoft',              'Génératives Google'],
-                ['Personnages',    'Voix brutes',                     'Nom, âge, rôle, personnalité'],
-                ['Ambiance',       '—',                               'Oui'],
-                ['Script IA',      'Générique',                       'Adapté aux profils'],
-                ['Quota',          'Illimité',                        '1 500/jour · 15/min'],
-              ].map(([label, edge, gemini]) => (
-                <div key={label} className="grid grid-cols-3 border-b border-jfb-bordure last:border-0">
-                  <div className="px-3 py-1.5 font-medium text-jfb-noir">{label}</div>
-                  <div className={`px-3 py-1.5 text-center ${engine === 'edge-tts' ? 'bg-white' : ''}`}>{edge}</div>
-                  <div className={`px-3 py-1.5 text-center ${engine === 'gemini' ? 'bg-white text-jfb-noir' : ''}`}>{gemini}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Podcast : Gemini forcé */}
         {isPodcast && (
@@ -221,26 +173,18 @@ export default function ConfigPage() {
             </div>
           </div>
 
-          {engine === 'edge-tts' ? (
-            <SpeakerConfig speakers={speakers} availableVoices={availableVoices} onChange={setSpeakers} />
-          ) : (
-            <GeminiConfig
-              speakers={speakers}
-              geminiVoices={geminiVoices}
-              profiles={geminiProfiles}
-              ambient={ambient}
-              ambientIntensity={ambientIntensity}
-              onProfilesChange={p => dispatch({ type: 'SET_GEMINI_PROFILES', payload: p as GeminiSpeakerProfile[] })}
-              onAmbientChange={a => dispatch({ type: 'SET_AMBIENT', payload: a })}
-              onAmbientIntensityChange={v => dispatch({ type: 'SET_AMBIENT_INTENSITY', payload: v })}
-            />
-          )}
+          <GeminiConfig
+            speakers={speakers}
+            geminiVoices={geminiVoices}
+            profiles={geminiProfiles}
+            ambient={ambient}
+            ambientIntensity={ambientIntensity}
+            onProfilesChange={p => dispatch({ type: 'SET_GEMINI_PROFILES', payload: p as GeminiSpeakerProfile[] })}
+            onAmbientChange={a => dispatch({ type: 'SET_AMBIENT', payload: a })}
+            onAmbientIntensityChange={v => dispatch({ type: 'SET_AMBIENT_INTENSITY', payload: v })}
+          />
         </div>
 
-        {/* Silence (Edge uniquement) */}
-        {engine === 'edge-tts' && (
-          <SilenceSlider value={silenceMs} onChange={v => dispatch({ type: 'SET_SILENCE_MS', payload: v })} />
-        )}
 
         {/* CTA */}
         {(() => {
