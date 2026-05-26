@@ -47,7 +47,7 @@ export default function GeminiConfig({
 
       {/* Usage info + mode toggle */}
       <div className="flex items-center justify-between text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2" style={{ borderRadius: '2px' }}>
-        <span><span className="font-semibold text-jfb-rose">Gemini TTS</span> · 1 500/jour · 15/min · Clé PLAI · Pas d'inscription requise</span>
+        <span><span className="font-semibold text-jfb-rose">Voix génératives IA</span> · 500/jour · Pas d'inscription requise</span>
         <button
           onClick={() => setAdvanced(a => !a)}
           className="ml-3 flex-shrink-0 text-[10px] px-2 py-0.5 border border-jfb-bordure text-jfb-gris hover:border-jfb-rose hover:text-jfb-rose"
@@ -75,7 +75,7 @@ export default function GeminiConfig({
 
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div>
-                <label className={labelCls}>Voix Gemini</label>
+                <label className={labelCls}>Voix</label>
                 <select
                   value={profile.voice}
                   onChange={e => updateProfile(spk.label, 'voice', e.target.value)}
