@@ -74,6 +74,61 @@ export async function POST(req: NextRequest) {
   let rawText = ''
   try {
     if (filename.endsWith('.pdf')) {
+      // pdfjs-dist v5 needs DOMMatrix (browser API absent in Node.js)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (typeof (globalThis as any).DOMMatrix === 'undefined') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(globalThis as any).DOMMatrix = class DOMMatrix {
+          a=1; b=0; c=0; d=1; e=0; f=0
+          m11=1; m12=0; m13=0; m14=0
+          m21=0; m22=1; m23=0; m24=0
+          m31=0; m32=0; m33=1; m34=0
+          m41=0; m42=0; m43=0; m44=1
+          is2D=true; isIdentity=true
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          constructor(init?: number[]) {
+            if (Array.isArray(init) && init.length === 6) {
+              this.a=init[0]; this.b=init[1]; this.c=init[2]
+              this.d=init[3]; this.e=init[4]; this.f=init[5]
+              this.m11=init[0]; this.m12=init[1]; this.m21=init[2]
+              this.m22=init[3]; this.m41=init[4]; this.m42=init[5]
+            }
+          }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          multiply(o: any) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return new (globalThis as any).DOMMatrix([
+              this.a*o.a + this.c*o.b,
+              this.b*o.a + this.d*o.b,
+              this.a*o.c + this.c*o.d,
+              this.b*o.c + this.d*o.d,
+              this.a*o.e + this.c*o.f + this.e,
+              this.b*o.e + this.d*o.f + this.f,
+            ])
+          }
+          translate(tx=0, ty=0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return new (globalThis as any).DOMMatrix([this.a,this.b,this.c,this.d,this.e+tx,this.f+ty])
+          }
+          scale(sx=1, sy=sx) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return new (globalThis as any).DOMMatrix([this.a*sx,this.b*sx,this.c*sy,this.d*sy,this.e,this.f])
+          }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          transformPoint(p: any) { return { x: this.a*p.x+this.c*p.y+this.e, y: this.b*p.x+this.d*p.y+this.f } }
+          inverse() {
+            const det = this.a*this.d - this.b*this.c
+            if (!det) return new (globalThis as any).DOMMatrix() // eslint-disable-line @typescript-eslint/no-explicit-any
+            const id = 1/det
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return new (globalThis as any).DOMMatrix([
+              this.d*id, -this.b*id, -this.c*id, this.a*id,
+              (this.c*this.f - this.d*this.e)*id,
+              (this.b*this.e - this.a*this.f)*id,
+            ])
+          }
+        }
+      }
       // pdf-parse v2 : API classe, pas de default export
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { PDFParse } = await import('pdf-parse') as any
