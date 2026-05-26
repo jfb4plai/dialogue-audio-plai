@@ -19,6 +19,8 @@ interface Props {
   script: string
   locale: string
   speakers: Speaker[]
+  niveau?: string
+  vocabulaire?: string
 }
 
 // Stopwords FR / NL / DE / EN / ES / IT (minimal)
@@ -92,7 +94,7 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-export default function ActivitesDeriveesPanel({ script, locale, speakers }: Props) {
+export default function ActivitesDeriveesPanel({ script, locale, speakers, niveau = '', vocabulaire = '' }: Props) {
   const [activeTab, setActiveTab] = useState<'lexique' | 'trous' | 'quiz' | null>(null)
 
   // Texte à trous
@@ -110,6 +112,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
   const [lexiqueItems, setLexiqueItems] = useState<LexiqueItem[] | null>(null)
   const [lexiqueLoading, setLexiqueLoading] = useState(false)
   const [lexiqueError, setLexiqueError] = useState<string | null>(null)
+  const [lexiqueChecked, setLexiqueChecked] = useState<Set<number>>(new Set())
 
   const lines = parseLines(script)
   const displayedLines = maxLines > 0 ? lines.slice(0, maxLines) : lines
@@ -148,11 +151,12 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
       const res = await fetch('/api/generate-lexique', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ script, locale }),
+        body: JSON.stringify({ script, locale, niveau, vocabulaire }),
       })
       const data = await res.json()
       if (data.error) { setLexiqueError(data.error); return }
       setLexiqueItems(data.items)
+      setLexiqueChecked(new Set(data.items.map((_: LexiqueItem, i: number) => i)))
     } catch {
       setLexiqueError('Erreur réseau.')
     } finally {
@@ -223,6 +227,8 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
 
   const exportLexiqueDocx = async () => {
     if (!lexiqueItems) return
+    const selected = lexiqueItems.filter((_, i) => lexiqueChecked.has(i))
+    if (selected.length === 0) return
     const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle } = await import('docx')
     const bs = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' }
     const borders = { top: bs, bottom: bs, left: bs, right: bs }
@@ -239,7 +245,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
     // Fiche élève : mot | traduction | réemploi (avec ___)
     const studentRows = [
       new TableRow({ children: [hCell('Mot'), hCell('Traduction'), hCell('Réemploi (complète le blanc)')] }),
-      ...lexiqueItems.map(item => new TableRow({
+      ...selected.map(item => new TableRow({
         children: [cell(item.word), cell(item.translation), cell(item.reuse)],
       })),
     ]
@@ -247,7 +253,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
     // Corrigé enseignant : mot | traduction | exemple | réemploi
     const teacherRows = [
       new TableRow({ children: [hCell('Mot'), hCell('Traduction'), hCell('Exemple du dialogue'), hCell('Réemploi')] }),
-      ...lexiqueItems.map(item => new TableRow({
+      ...selected.map(item => new TableRow({
         children: [cell(item.word), cell(item.translation), cell(item.example, true), cell(item.reuse)],
       })),
     ]
@@ -303,14 +309,17 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
           {lexiqueItems && (
             <>
               <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
-                <p className="text-xs text-jfb-gris">{lexiqueItems.length} mots — mot · traduction · exemple · réemploi</p>
+                <p className="text-xs text-jfb-gris">
+                  {lexiqueChecked.size}/{lexiqueItems.length} mots sélectionnés — décochez les mots à exclure
+                </p>
                 <div className="flex gap-2">
                   <button onClick={exportLexiqueDocx}
-                    className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige"
+                    disabled={lexiqueChecked.size === 0}
+                    className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige disabled:opacity-40"
                     style={{ borderRadius: '2px' }}>
-                    Télécharger .docx
+                    Télécharger .docx ({lexiqueChecked.size})
                   </button>
-                  <button onClick={() => { setLexiqueItems(null); loadLexique() }}
+                  <button onClick={() => { setLexiqueItems(null); setLexiqueChecked(new Set()); loadLexique() }}
                     className="text-xs text-jfb-gris underline hover:text-jfb-noir">
                     Régénérer
                   </button>
@@ -320,6 +329,12 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="bg-jfb-beige">
+                      <th className="px-2 py-2 border border-jfb-bordure w-8">
+                        <input type="checkbox"
+                          checked={lexiqueChecked.size === lexiqueItems.length}
+                          onChange={e => setLexiqueChecked(e.target.checked ? new Set(lexiqueItems.map((_, i) => i)) : new Set())}
+                          className="accent-jfb-rose" />
+                      </th>
                       <th className="text-left px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">Mot</th>
                       <th className="text-left px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">Traduction</th>
                       <th className="text-left px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">Exemple du dialogue</th>
@@ -327,14 +342,26 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers }: Pro
                     </tr>
                   </thead>
                   <tbody>
-                    {lexiqueItems.map((item, i) => (
-                      <tr key={i} className={i % 2 === 0 ? '' : 'bg-jfb-subtil'}>
-                        <td className="px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">{item.word}</td>
-                        <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris">{item.translation}</td>
-                        <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris text-xs italic">«&#8201;{item.example}&#8201;»</td>
-                        <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris text-xs">{item.reuse}</td>
-                      </tr>
-                    ))}
+                    {lexiqueItems.map((item, i) => {
+                      const checked = lexiqueChecked.has(i)
+                      return (
+                        <tr key={i} className={`${checked ? '' : 'opacity-40'} ${i % 2 === 0 ? '' : 'bg-jfb-subtil'}`}>
+                          <td className="px-2 py-2 border border-jfb-bordure text-center">
+                            <input type="checkbox" checked={checked}
+                              onChange={e => {
+                                const next = new Set(lexiqueChecked)
+                                e.target.checked ? next.add(i) : next.delete(i)
+                                setLexiqueChecked(next)
+                              }}
+                              className="accent-jfb-rose" />
+                          </td>
+                          <td className="px-3 py-2 border border-jfb-bordure font-medium text-jfb-noir">{item.word}</td>
+                          <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris">{item.translation}</td>
+                          <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris text-xs italic">«&#8201;{item.example}&#8201;»</td>
+                          <td className="px-3 py-2 border border-jfb-bordure text-jfb-gris text-xs">{item.reuse}</td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

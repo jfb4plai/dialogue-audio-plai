@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { GeminiSpeakerProfile } from '@/types/dialogue'
+import { useWizard } from '@/lib/wizard-context'
 
 interface Props {
   locale: string
@@ -22,6 +23,7 @@ const LOCALE_NAMES: Record<string, string> = {
 }
 
 export default function ScriptGenerator({ locale, speakerCount, onGenerated, engine, geminiProfiles }: Props) {
+  const { dispatch } = useWizard()
   const [open, setOpen] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -45,6 +47,8 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated, eng
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
+      dispatch({ type: 'SET_NIVEAU', payload: niveau })
+      dispatch({ type: 'SET_VOCABULAIRE', payload: vocabulaire })
       onGenerated(data.script)
       setOpen(false)
     } catch (err) {

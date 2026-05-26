@@ -9,7 +9,7 @@ import HistoryPanel from '@/components/HistoryPanel'
 export default function ResultPage() {
   const { state, reset, isHydrated } = useWizard()
   const router = useRouter()
-  const { mode, result, script, locale, speakers } = state
+  const { mode, result, script, locale, speakers, niveau, vocabulaire } = state
 
   // Garde-fou
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function ResultPage() {
       <AudioResult result={result} />
 
       {/* Exercices dérivés */}
-      <ActivitesDeriveesPanel script={script} locale={locale} speakers={speakers} />
+      <ActivitesDeriveesPanel script={script} locale={locale} speakers={speakers} niveau={niveau} vocabulaire={vocabulaire} />
 
       {/* Historique */}
       <HistoryPanel />

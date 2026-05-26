@@ -35,14 +35,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Clé API non configurée.' }, { status: 500 })
   }
 
-  const { script, locale = 'nl_BE' } = await req.json()
+  const { script, locale = 'nl_BE', niveau = '', vocabulaire = '' } = await req.json()
   if (!script?.trim()) {
     return NextResponse.json({ error: 'Script manquant.' }, { status: 400 })
   }
 
   const langue = LOCALE_LABELS[locale] ?? 'la langue du dialogue'
 
-  const userPrompt = `À partir de ce dialogue en ${langue}, sélectionne 8 à 12 mots ou expressions-clés utiles pour une activité lexicale pédagogique (ni trop fréquents, ni trop rares — évite les mots grammaticaux).
+  const niveauNote = niveau.trim() ? `\n- Niveau des apprenants : ${niveau.trim()} (adapte la difficulté des mots sélectionnés)` : ''
+  const vocForcéNote = vocabulaire.trim()
+    ? `\n- Vocabulaire obligatoire à inclure (ces mots DOIVENT figurer dans la sélection s'ils apparaissent dans le dialogue) : ${vocabulaire.trim()}`
+    : ''
+
+  const userPrompt = `À partir de ce dialogue en ${langue}, sélectionne 8 à 12 mots ou expressions-clés utiles pour une activité lexicale pédagogique (ni trop fréquents, ni trop rares — évite les mots grammaticaux).${niveauNote}${vocForcéNote}
 
 DIALOGUE :
 ${script}

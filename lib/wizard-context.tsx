@@ -18,6 +18,8 @@ export interface WizardState {
   script: string
   result: GenerateResult | null
   voices: VoicesConfig
+  niveau: string
+  vocabulaire: string
 }
 
 type Action =
@@ -33,6 +35,8 @@ type Action =
   | { type: 'SET_SCRIPT';            payload: string }
   | { type: 'SET_RESULT';            payload: GenerateResult | null }
   | { type: 'SET_VOICES';            payload: VoicesConfig }
+  | { type: 'SET_NIVEAU';            payload: string }
+  | { type: 'SET_VOCABULAIRE';       payload: string }
   | { type: 'RESET' }
 
 const initialState: WizardState = {
@@ -51,6 +55,8 @@ const initialState: WizardState = {
   script: '',
   result: null,
   voices: DEFAULT_VOICES,
+  niveau: '',
+  vocabulaire: '',
 }
 
 const SESSION_KEY = 'da_wizard_state'
@@ -69,6 +75,8 @@ function reducer(state: WizardState, action: Action): WizardState {
     case 'SET_SCRIPT':            return { ...state, script: action.payload }
     case 'SET_RESULT':            return { ...state, result: action.payload }
     case 'SET_VOICES':            return { ...state, voices: action.payload }
+    case 'SET_NIVEAU':            return { ...state, niveau: action.payload }
+    case 'SET_VOCABULAIRE':       return { ...state, vocabulaire: action.payload }
     case 'RESET':                 return { ...initialState, voices: state.voices, geminiVoices: state.geminiVoices }
     default:                      return state
   }
@@ -124,6 +132,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       if (saved.silenceMs !== undefined)       dispatch({ type: 'SET_SILENCE_MS',        payload: saved.silenceMs ?? 500 })
       if (saved.script !== undefined)          dispatch({ type: 'SET_SCRIPT',            payload: saved.script ?? '' })
       if (saved.result)                        dispatch({ type: 'SET_RESULT',            payload: saved.result })
+      if (saved.niveau !== undefined)          dispatch({ type: 'SET_NIVEAU',            payload: saved.niveau ?? '' })
+      if (saved.vocabulaire !== undefined)     dispatch({ type: 'SET_VOCABULAIRE',       payload: saved.vocabulaire ?? '' })
     }
     setIsHydrated(true)
   }, [])
