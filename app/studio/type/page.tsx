@@ -37,7 +37,7 @@ export default function TypePage() {
             Échange entre 2 à 4 locuteurs. Idéal pour des exercices de compréhension orale, simulations de situations professionnelles, monologues.
           </p>
           <ul className="mt-4 space-y-1 text-xs text-jfb-gris-cl">
-            <li>· Edge TTS ou Gemini TTS</li>
+            <li>· Voix génératives IA</li>
             <li>· Jusqu&apos;à 60 répliques (~3 min)</li>
             <li>· Script IA ou texte libre</li>
           </ul>
@@ -57,7 +57,7 @@ export default function TypePage() {
             Format long avec animateur et invités. Script généré depuis un document (PDF ou Word). Voix Gemini avec profils personnalisés.
           </p>
           <ul className="mt-4 space-y-1 text-xs text-jfb-gris-cl">
-            <li>· Gemini TTS uniquement</li>
+            <li>· Voix génératives IA</li>
             <li>· Jusqu&apos;à 4 locuteurs</li>
             <li>· IA à partir d&apos;un document uploadé</li>
           </ul>
