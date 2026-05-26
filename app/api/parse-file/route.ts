@@ -74,23 +74,12 @@ export async function POST(req: NextRequest) {
   let rawText = ''
   try {
     if (filename.endsWith('.pdf')) {
-      // pdfjs-dist uses DOMMatrix (browser API) — polyfill for Node.js
-      if (typeof (globalThis as Record<string, unknown>).DOMMatrix === 'undefined') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(globalThis as any).DOMMatrix = class DOMMatrix {
-          constructor() {}
-          multiply() { return this }
-          translate() { return this }
-          scale() { return this }
-          rotate() { return this }
-        }
-      }
-      // Import dynamique — contourne le chargement des fichiers de test à l'init
+      // pdf-parse v2 : API classe, pas de default export
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfMod = await import('pdf-parse') as any
-      const pdfParse: (buf: Buffer) => Promise<{ text: string }> = pdfMod.default ?? pdfMod
-      const pdfData = await pdfParse(buffer)
-      rawText = pdfData.text
+      const { PDFParse } = await import('pdf-parse') as any
+      const parser = new PDFParse({ data: buffer })
+      const result = await parser.getText()
+      rawText = result.text
     } else if (filename.endsWith('.docx') || filename.endsWith('.doc')) {
       const result = await mammoth.extractRawText({ buffer })
       rawText = result.value
