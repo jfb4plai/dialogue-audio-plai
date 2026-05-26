@@ -70,96 +70,10 @@ export async function POST(req: NextRequest) {
   const filename = fileEntry.name.toLowerCase()
   const buffer = Buffer.from(await fileEntry.arrayBuffer())
 
-  // Extraction texte
-  let rawText = ''
-  try {
-    if (filename.endsWith('.pdf')) {
-      // pdfjs-dist v5 needs DOMMatrix (browser API absent in Node.js)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (typeof (globalThis as any).DOMMatrix === 'undefined') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(globalThis as any).DOMMatrix = class DOMMatrix {
-          a=1; b=0; c=0; d=1; e=0; f=0
-          m11=1; m12=0; m13=0; m14=0
-          m21=0; m22=1; m23=0; m24=0
-          m31=0; m32=0; m33=1; m34=0
-          m41=0; m42=0; m43=0; m44=1
-          is2D=true; isIdentity=true
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          constructor(init?: number[]) {
-            if (Array.isArray(init) && init.length === 6) {
-              this.a=init[0]; this.b=init[1]; this.c=init[2]
-              this.d=init[3]; this.e=init[4]; this.f=init[5]
-              this.m11=init[0]; this.m12=init[1]; this.m21=init[2]
-              this.m22=init[3]; this.m41=init[4]; this.m42=init[5]
-            }
-          }
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          multiply(o: any) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return new (globalThis as any).DOMMatrix([
-              this.a*o.a + this.c*o.b,
-              this.b*o.a + this.d*o.b,
-              this.a*o.c + this.c*o.d,
-              this.b*o.c + this.d*o.d,
-              this.a*o.e + this.c*o.f + this.e,
-              this.b*o.e + this.d*o.f + this.f,
-            ])
-          }
-          translate(tx=0, ty=0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return new (globalThis as any).DOMMatrix([this.a,this.b,this.c,this.d,this.e+tx,this.f+ty])
-          }
-          scale(sx=1, sy=sx) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return new (globalThis as any).DOMMatrix([this.a*sx,this.b*sx,this.c*sy,this.d*sy,this.e,this.f])
-          }
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          transformPoint(p: any) { return { x: this.a*p.x+this.c*p.y+this.e, y: this.b*p.x+this.d*p.y+this.f } }
-          inverse() {
-            const det = this.a*this.d - this.b*this.c
-            if (!det) return new (globalThis as any).DOMMatrix() // eslint-disable-line @typescript-eslint/no-explicit-any
-            const id = 1/det
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return new (globalThis as any).DOMMatrix([
-              this.d*id, -this.b*id, -this.c*id, this.a*id,
-              (this.c*this.f - this.d*this.e)*id,
-              (this.b*this.e - this.a*this.f)*id,
-            ])
-          }
-        }
-      }
-      // pdf-parse v2 : API classe, pas de default export
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { PDFParse } = await import('pdf-parse') as any
-      const parser = new PDFParse({ data: buffer })
-      const result = await parser.getText()
-      rawText = result.text
-    } else if (filename.endsWith('.docx') || filename.endsWith('.doc')) {
-      const result = await mammoth.extractRawText({ buffer })
-      rawText = result.value
-    } else {
-      return NextResponse.json({ error: 'Format non supporté. Utilisez un fichier .pdf ou .docx.' }, { status: 400 })
-    }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    return NextResponse.json({ error: `Impossible de lire le fichier : ${msg}` }, { status: 422 })
-  }
-
-  rawText = rawText.trim()
-  if (!rawText || rawText.length < 50) {
-    return NextResponse.json({ error: 'Le document ne contient pas assez de texte exploitable.' }, { status: 422 })
-  }
-
-  // Tronque pour ne pas exploser les tokens
-  const docText = rawText.length > MAX_TEXT_CHARS
-    ? rawText.slice(0, MAX_TEXT_CHARS) + '\n[… document tronqué …]'
-    : rawText
-
   const langue = LOCALE_LABELS[locale] ?? locale
   const letters = ['A', 'B', 'C', 'D'].slice(0, nb_locuteurs)
 
-  // Profils Gemini optionnels
+  // Profils optionnels
   let profilesNote = ''
   if (profilesRaw) {
     try {
@@ -201,17 +115,49 @@ EXEMPLE :
 A: Goedemorgen, kan ik u helpen?
 B: Ja, graag. Ik zoek een tafel voor twee personen.`
 
-  const userPrompt = `Voici un document source :
-
----
-${docText}
----
-
-Sur la base de ce contenu, génère un ${mode} en ${langue}.
+  const scriptInstructions = `Sur la base de ce contenu, génère un ${mode} en ${langue}.
 Locuteurs : ${locuteurs}${profilesNote}
 Nombre de répliques : environ ${mode === 'podcast' ? 40 : 20}
 Le ${mode} doit rester fidèle aux idées du document tout en étant naturel et pédagogique.
 Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').join(' ou ')} uniquement.`
+
+  // Construit le contenu du message selon le type de fichier
+  // PDF : envoyé directement à Claude (évite les problèmes worker pdfjs en serverless)
+  // DOCX : extraction mammoth puis texte dans le prompt
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let messageContent: any
+
+  if (filename.endsWith('.pdf')) {
+    messageContent = [
+      {
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data: buffer.toString('base64'),
+        },
+      },
+      { type: 'text', text: scriptInstructions },
+    ]
+  } else if (filename.endsWith('.docx') || filename.endsWith('.doc')) {
+    let rawText = ''
+    try {
+      const result = await mammoth.extractRawText({ buffer })
+      rawText = result.value.trim()
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      return NextResponse.json({ error: `Impossible de lire le fichier : ${msg}` }, { status: 422 })
+    }
+    if (!rawText || rawText.length < 50) {
+      return NextResponse.json({ error: 'Le document ne contient pas assez de texte exploitable.' }, { status: 422 })
+    }
+    const docText = rawText.length > MAX_TEXT_CHARS
+      ? rawText.slice(0, MAX_TEXT_CHARS) + '\n[… document tronqué …]'
+      : rawText
+    messageContent = `Voici un document source :\n\n---\n${docText}\n---\n\n${scriptInstructions}`
+  } else {
+    return NextResponse.json({ error: 'Format non supporté. Utilisez un fichier .pdf ou .docx.' }, { status: 400 })
+  }
 
   const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -220,7 +166,7 @@ Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').jo
       const message = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 2048,
-        messages: [{ role: 'user', content: userPrompt }],
+        messages: [{ role: 'user', content: messageContent }],
         system: systemPrompt,
       })
       const raw = message.content[0].type === 'text' ? message.content[0].text : ''
