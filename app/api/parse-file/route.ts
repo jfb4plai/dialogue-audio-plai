@@ -103,35 +103,25 @@ export async function POST(req: NextRequest) {
 
   const isPodcast = mode === 'podcast'
 
+  // Appel 1 — génération du contenu pur (sans structure d'épisodes)
   const systemPrompt = `Tu génères des scripts de ${mode} pédagogiques pour des enseignants de la Fédération Wallonie-Bruxelles, à partir d'un document source.
 
 RÈGLES ABSOLUES DE FORMAT :
 1. Chaque réplique commence par une lettre majuscule suivie de ": " — lettres : ${letters.join(', ')}
 2. ZÉRO markdown : pas de **, *, #, _, tirets de liste
-3. ZÉRO titre, commentaire hors-script, numérotation
-4. Uniquement les répliques et les marqueurs d'épisode, rien d'autre
-5. LANGUE STRICTE : TOUT le texte en ${langue} — aucun mot dans une autre langue
-6. CONCLUSION : les 2 dernières répliques du dernier épisode closent naturellement l'échange — ne jamais s'arrêter en plein milieu d'une idée${isPodcast ? `
-7. STRUCTURE EN ÉPISODES obligatoire : chaque épisode de ~15 répliques est précédé par son marqueur sur une ligne seule : [ÉPISODE 1], [ÉPISODE 2], etc.
-8. FIN DE CHAQUE ÉPISODE (sauf dernier) : la dernière réplique annonce la suite ("Dans le prochain épisode, nous aborderons…" ou équivalent)
-9. DÉBUT DE CHAQUE ÉPISODE (sauf premier) : la première réplique résume brièvement le précédent ("Dans l'épisode précédent, nous avons vu que…" ou équivalent)` : ''}
+3. ZÉRO titre, commentaire, numérotation — uniquement les répliques
+4. LANGUE STRICTE : TOUT le texte en ${langue} — aucun mot dans une autre langue
+5. CONCLUSION OBLIGATOIRE : les 2 dernières répliques closent naturellement l'échange
 
-EXEMPLE DE FORMAT :${isPodcast ? `
-[ÉPISODE 1]
-A: …
-B: …
-A: Dans le prochain épisode, nous parlerons de…
-[ÉPISODE 2]
-B: Dans l'épisode précédent, nous avons abordé…
-A: …` : `
+EXEMPLE :
 A: Goedemorgen, kan ik u helpen?
-B: Ja, graag. Ik zoek een tafel voor twee personen.`}`
+B: Ja, graag. Ik zoek een tafel voor twee personen.`
 
   const scriptInstructions = `Sur la base de ce contenu, génère un ${mode} en ${langue}.
 Locuteurs : ${locuteurs}${profilesNote}
-Nombre de répliques : environ ${isPodcast ? '30 à 36 maximum (épisodes de 12 à 15 répliques, 2 à 3 épisodes selon le contenu)' : '20'}
-Le ${mode} doit couvrir les idées principales du document de façon naturelle et pédagogique, avec une conclusion construite.
-Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').join(' ou ')} uniquement.${isPodcast ? '\nStructure impérative : marqueurs [ÉPISODE N] avant chaque bloc.' : ''}`
+Nombre de répliques : exactement ${isPodcast ? 28 : 20} — ni plus, ni moins.
+Le ${mode} couvre les idées principales du document, de façon naturelle et pédagogique, avec une vraie conclusion.
+Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').join(' ou ')} uniquement.`
 
   // Construit le contenu du message selon le type de fichier
   // PDF : envoyé directement à Claude (évite les problèmes worker pdfjs en serverless)
@@ -173,24 +163,57 @@ Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').jo
 
   const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
+  // Fonction utilitaire : nettoie les lignes d'un script brut
+  const cleanLines = (raw: string, keepMarkers: boolean) =>
+    raw.split('\n')
+      .map(l => l.trim())
+      .filter(l => /^[A-D]:\s/.test(l) || (keepMarkers && /^\[.{1,20}\d\s*\]$/.test(l)))
+      .map(l => l.replace(/\*\*/g, '').replace(/\*/g, '').replace(/_/g, ''))
+      .join('\n')
+
   for (let attempt = 0; attempt <= 2; attempt++) {
     try {
+      // Appel 1 : contenu
       const message = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: isPodcast ? 6000 : 4096,
+        max_tokens: 4096,
         messages: [{ role: 'user', content: messageContent }],
         system: systemPrompt,
       })
-      const raw = message.content[0].type === 'text' ? message.content[0].text : ''
-      const clean = raw.split('\n')
-        .map(l => l.trim())
-        .filter(l => /^[A-D]:\s/.test(l) || /^\[.{1,20}\d\s*\]$/.test(l))
-        .map(l => l.replace(/\*\*/g, '').replace(/\*/g, '').replace(/_/g, ''))
-        .join('\n')
-      if (!clean) {
+      const raw1 = message.content[0].type === 'text' ? message.content[0].text : ''
+      const contentScript = cleanLines(raw1, false)
+      if (!contentScript) {
         return NextResponse.json({ error: 'Le modèle n\'a pas produit de format valide. Réessayez.' }, { status: 500 })
       }
-      return NextResponse.json({ script: clean })
+
+      // Appel 2 (podcast uniquement) : découpage en épisodes + transitions
+      if (isPodcast) {
+        const structureSystem = `Tu es un éditeur de scripts podcast. Tu découpes un script en épisodes et ajoutes des répliques de transition. Tu retournes UNIQUEMENT le script restructuré, sans aucun commentaire.`
+        const structureUser = `Voici un script podcast de ${contentScript.split('\n').length} répliques en ${langue}.
+
+Découpe-le en épisodes de 13 à 14 répliques et ajoute les transitions :
+1. Insère [ÉPISODE 1] sur une ligne seule avant la première réplique
+2. Insère [ÉPISODE 2], [ÉPISODE 3], etc. toutes les 13-14 répliques
+3. Avant chaque marqueur [ÉPISODE N+1], INSÈRE une réplique d'annonce de fin d'épisode : "A: Dans le prochain épisode, [thème de la suite en 1 phrase]." (ou B: selon le locuteur actif)
+4. Après chaque marqueur [ÉPISODE N+1] (sauf le premier), INSÈRE une réplique d'ouverture : "B: Dans l'épisode précédent, [rappel en 1 phrase]." (ou A:)
+5. Conserve TOUTES les répliques originales sans les modifier
+6. Retourne le script restructuré complet — rien d'autre
+
+Script à structurer :
+${contentScript}`
+
+        const msg2 = await client.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 5000,
+          messages: [{ role: 'user', content: structureUser }],
+          system: structureSystem,
+        })
+        const raw2 = msg2.content[0].type === 'text' ? msg2.content[0].text : ''
+        const structured = cleanLines(raw2, true)
+        return NextResponse.json({ script: structured || contentScript })
+      }
+
+      return NextResponse.json({ script: contentScript })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       const isOverloaded = msg.includes('overloaded') || msg.includes('529')
