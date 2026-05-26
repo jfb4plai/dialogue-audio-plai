@@ -162,7 +162,10 @@ export default function GeminiConfig({
 
       {/* Ambient sound */}
       <div className="border border-jfb-bordure p-4" style={{ borderRadius: '2px' }}>
-        <p className="text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em] mb-3">Ambiance sonore</p>
+        <div className="flex items-baseline gap-2 mb-3">
+          <p className="text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Contexte scénique</p>
+          <span className="text-[10px] text-jfb-gris-cl">(influence le ton des voix, pas le son)</span>
+        </div>
         <div className="mb-3">
           <label className={labelCls}>Description de la scène <span className="text-jfb-gris-cl">(optionnel)</span></label>
           <input type="text" value={ambient}
@@ -172,12 +175,12 @@ export default function GeminiConfig({
         </div>
         {ambient && (
           <div>
-            <label className={labelCls}>Intensité de l'ambiance : <strong>{ambientIntensity}%</strong></label>
+            <label className={labelCls}>Intensité du contexte : <strong>{ambientIntensity}%</strong></label>
             <input type="range" min={0} max={40} step={5} value={ambientIntensity}
               onChange={e => onAmbientIntensityChange(Number(e.target.value))}
               className="w-full accent-jfb-rose" />
             <div className="flex justify-between text-[10px] text-jfb-gris-cl mt-0.5">
-              <span>Silence</span><span>Très discrète</span><span>Modérée</span><span>Présente</span>
+              <span>Neutre</span><span>Subtil</span><span>Marqué</span><span>Fort</span>
             </div>
           </div>
         )}
