@@ -33,6 +33,7 @@ export default function ScriptPage() {
 
   const [source, setSource] = useState<Source>('ai-form')
   const [error, setError] = useState<string | null>(null)
+  const [activeEpisodeScript, setActiveEpisodeScript] = useState<string>('')
 
   // File upload state (source = 'ai-file')
   const [file, setFile] = useState<File | null>(null)
@@ -91,7 +92,9 @@ export default function ScriptPage() {
 
   // Génération audio — les erreurs remontent à GenerateButton
   const handleGenerate = async () => {
-    if (!script.trim() || speakers.length < 2) return
+    // Use active episode script if set (multi-episode podcast), else full script
+    const scriptToGenerate = activeEpisodeScript || script
+    if (!scriptToGenerate.trim() || speakers.length < 2) return
     setError(null)
 
     // Sécurité : si engine=gemini mais Gemini non configuré (pas de voix), bloquer ici
@@ -108,7 +111,7 @@ export default function ScriptPage() {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          script,
+          script: scriptToGenerate,
           locale,
           speakers: geminiProfiles.map(p => ({
             label: p.label,
@@ -143,14 +146,14 @@ export default function ScriptPage() {
       // Dialogue : via proxy Vercel /api/generate
       if (mode === 'podcast') {
         res = await callHFSpaceDirect({
-          script,
+          script: scriptToGenerate,
           speakers: enrichedSpeakers,
           silence_ms: silenceMs,
           item_title: `${mode} ${locale}`,
         })
       } else {
         res = await callHFSpace({
-          script,
+          script: scriptToGenerate,
           speakers: enrichedSpeakers,
           silence_ms: silenceMs,
           item_title: `${mode} ${locale}`,
@@ -165,7 +168,8 @@ export default function ScriptPage() {
     router.push('/studio/result')
   }
 
-  const canGenerate = script.trim().length > 0 && speakers.length >= 2
+  const scriptToCheck = activeEpisodeScript || script
+  const canGenerate = scriptToCheck.trim().length > 0 && speakers.length >= 2
 
   if (!isHydrated || !mode) return null
 
@@ -289,7 +293,13 @@ export default function ScriptPage() {
         {/* Éditeur toujours visible */}
         <div>
           <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Éditeur de script</div>
-          <ScriptEditor script={script} speakers={speakers} targetLocale={locale} onChange={setScript} />
+          <ScriptEditor
+            script={script}
+            speakers={speakers}
+            targetLocale={locale}
+            onChange={setScript}
+            onActiveEpisodeChange={(epScript) => setActiveEpisodeScript(epScript)}
+          />
         </div>
 
         {/* Notice RGPD Internet Archive */}

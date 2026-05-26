@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Speaker } from '@/types/dialogue'
 
 interface Props {
@@ -7,10 +7,43 @@ interface Props {
   speakers: Speaker[]
   targetLocale: string
   onChange: (script: string) => void
+  onActiveEpisodeChange?: (episodeScript: string, episodeIdx: number) => void
 }
 
 function estimateDuration(text: string): number {
   return Math.ceil(text.length / 50) * 3
+}
+
+interface Episode { title: string; content: string }
+
+function parseEpisodes(script: string): Episode[] {
+  const lines = script.split('\n')
+  const episodes: Episode[] = []
+  let currentTitle = ''
+  let currentLines: string[] = []
+
+  const isMarker = (l: string) => {
+    const t = l.trim()
+    return t.startsWith('[') && t.endsWith(']') && /\d/.test(t) && t.length < 25
+  }
+
+  for (const line of lines) {
+    if (isMarker(line)) {
+      if (currentTitle || currentLines.some(l => l.trim())) {
+        episodes.push({ title: currentTitle, content: currentLines.join('\n').trim() })
+      }
+      const num = line.trim().match(/(\d+)/)?.[1] ?? String(episodes.length + 1)
+      currentTitle = `Épisode ${num}`
+      currentLines = []
+    } else {
+      currentLines.push(line)
+    }
+  }
+  if (currentLines.some(l => l.trim())) {
+    episodes.push({ title: currentTitle, content: currentLines.join('\n').trim() })
+  }
+  if (episodes.length <= 1 && !episodes[0]?.title) return [{ title: '', content: script }]
+  return episodes
 }
 
 // DeepL language codes (source: always fr)
@@ -25,15 +58,32 @@ const LANG_CODES: Record<string, string> = {
   it_IT: 'it',
 }
 
-export default function ScriptEditor({ script, speakers, targetLocale, onChange }: Props) {
+export default function ScriptEditor({ script, speakers, targetLocale, onChange, onActiveEpisodeChange }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [translating, setTranslating] = useState(false)
   const [translateError, setTranslateError] = useState<string | null>(null)
+  const [activeEpisodeIdx, setActiveEpisodeIdx] = useState(0)
 
   const colorMap: Record<string, string> = {}
   speakers.forEach(s => { colorMap[s.label] = s.color })
 
-  const lines = script.split('\n')
+  const episodes = parseEpisodes(script)
+  const hasEpisodes = episodes.length > 1 || !!episodes[0]?.title
+
+  // Reset active episode when script changes (new generation)
+  useEffect(() => { setActiveEpisodeIdx(0) }, [script])
+
+  // Notify parent of active episode script
+  useEffect(() => {
+    if (onActiveEpisodeChange) {
+      onActiveEpisodeChange(episodes[activeEpisodeIdx]?.content ?? script, activeEpisodeIdx)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeEpisodeIdx, script])
+
+  const activeContent = episodes[activeEpisodeIdx]?.content ?? script
+
+  const lines = activeContent.split('\n')
   let replyCount = 0
   const speakersFound = new Set<string>()
 
@@ -48,8 +98,13 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
     return { key: i, label: null, text: trimmed, color: null }
   })
 
-  const estSecs = estimateDuration(script.replace(/^[A-D]:/gm, ''))
-  const limitWarning = replyCount > 60
+  // Total stats for the whole script
+  const totalLines = script.split('\n')
+  let totalReplyCount = 0
+  totalLines.forEach(l => { if (l.trim().match(/^[A-D]:/) ) totalReplyCount++ })
+
+  const estSecs = estimateDuration(activeContent.replace(/^[A-D]:/gm, ''))
+  const limitWarning = totalReplyCount > 60
 
   // Word import via mammoth (client-side)
   const handleWordImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,6 +203,25 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
         <p className="mt-1 text-xs text-red-600 bg-red-50 border border-red-200 px-2 py-1" style={{ borderRadius: '2px' }}>{translateError}</p>
       )}
 
+      {/* Episode tabs — shown only when script has [ÉPISODE N] markers */}
+      {hasEpisodes && (
+        <div className="mt-2 flex gap-1 flex-wrap">
+          {episodes.map((ep, idx) => {
+            const epSecs = estimateDuration(ep.content.replace(/^[A-D]:/gm, ''))
+            return (
+              <button
+                key={idx}
+                onClick={() => setActiveEpisodeIdx(idx)}
+                className={`text-xs px-3 py-1.5 border font-medium transition-colors ${activeEpisodeIdx === idx ? 'bg-jfb-noir text-white border-jfb-noir' : 'bg-white text-jfb-gris border-jfb-bordure hover:border-jfb-noir'}`}
+                style={{ borderRadius: '2px' }}
+              >
+                {ep.title} <span className="opacity-70 font-normal">~{epSecs}s</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* Colored preview */}
       {replyCount > 0 && (
         <div className="mt-2 border border-jfb-bordure p-3 bg-white text-sm space-y-1" style={{ borderRadius: '2px' }}>
@@ -164,7 +238,10 @@ export default function ScriptEditor({ script, speakers, targetLocale, onChange 
 
       <div className="mt-1 flex items-center justify-between">
         <p className="text-xs text-jfb-gris">
-          {replyCount} réplique{replyCount > 1 ? 's' : ''} · {speakersFound.size} locuteur{speakersFound.size > 1 ? 's' : ''} · ~{estSecs}s estimées
+          {hasEpisodes
+            ? `${replyCount} réplique${replyCount > 1 ? 's' : ''} · ~${estSecs}s — épisode actif · ${totalReplyCount} au total`
+            : `${replyCount} réplique${replyCount > 1 ? 's' : ''} · ${speakersFound.size} locuteur${speakersFound.size > 1 ? 's' : ''} · ~${estSecs}s estimées`
+          }
         </p>
         {limitWarning && (
           <p className="text-xs text-amber-600">

@@ -101,25 +101,37 @@ export async function POST(req: NextRequest) {
     ? 'A uniquement (monologue)'
     : `${letters.join(', ')} (${nb_locuteurs} locuteurs alternés)`
 
+  const isPodcast = mode === 'podcast'
+
   const systemPrompt = `Tu génères des scripts de ${mode} pédagogiques pour des enseignants de la Fédération Wallonie-Bruxelles, à partir d'un document source.
 
 RÈGLES ABSOLUES DE FORMAT :
 1. Chaque réplique commence par une lettre majuscule suivie de ": " — lettres : ${letters.join(', ')}
 2. ZÉRO markdown : pas de **, *, #, _, tirets de liste
 3. ZÉRO titre, commentaire hors-script, numérotation
-4. Uniquement les répliques, rien d'autre
+4. Uniquement les répliques et les marqueurs d'épisode, rien d'autre
 5. LANGUE STRICTE : TOUT le texte en ${langue} — aucun mot dans une autre langue
-6. CONCLUSION OBLIGATOIRE : les 2 dernières répliques closent naturellement l'échange — ne jamais s'arrêter en plein milieu d'une idée
+6. CONCLUSION : les 2 dernières répliques du dernier épisode closent naturellement l'échange — ne jamais s'arrêter en plein milieu d'une idée${isPodcast ? `
+7. STRUCTURE EN ÉPISODES obligatoire : chaque épisode de ~15 répliques est précédé par son marqueur sur une ligne seule : [ÉPISODE 1], [ÉPISODE 2], etc.
+8. FIN DE CHAQUE ÉPISODE (sauf dernier) : la dernière réplique annonce la suite ("Dans le prochain épisode, nous aborderons…" ou équivalent)
+9. DÉBUT DE CHAQUE ÉPISODE (sauf premier) : la première réplique résume brièvement le précédent ("Dans l'épisode précédent, nous avons vu que…" ou équivalent)` : ''}
 
-EXEMPLE :
+EXEMPLE DE FORMAT :${isPodcast ? `
+[ÉPISODE 1]
+A: …
+B: …
+A: Dans le prochain épisode, nous parlerons de…
+[ÉPISODE 2]
+B: Dans l'épisode précédent, nous avons abordé…
+A: …` : `
 A: Goedemorgen, kan ik u helpen?
-B: Ja, graag. Ik zoek een tafel voor twee personen.`
+B: Ja, graag. Ik zoek een tafel voor twee personen.`}`
 
   const scriptInstructions = `Sur la base de ce contenu, génère un ${mode} en ${langue}.
 Locuteurs : ${locuteurs}${profilesNote}
-Nombre de répliques : environ ${mode === 'podcast' ? 40 : 20}
+Nombre de répliques : environ ${isPodcast ? '40 à 50 (réparties en épisodes de ~15 répliques)' : '20'}
 Le ${mode} doit couvrir les idées principales du document de façon naturelle et pédagogique, avec une conclusion construite.
-Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').join(' ou ')} uniquement.`
+Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').join(' ou ')} uniquement.${isPodcast ? '\nStructure impérative : marqueurs [ÉPISODE N] avant chaque bloc.' : ''}`
 
   // Construit le contenu du message selon le type de fichier
   // PDF : envoyé directement à Claude (évite les problèmes worker pdfjs en serverless)
@@ -165,7 +177,7 @@ Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').jo
     try {
       const message = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4096,
+        max_tokens: isPodcast ? 6000 : 4096,
         messages: [{ role: 'user', content: messageContent }],
         system: systemPrompt,
       })
