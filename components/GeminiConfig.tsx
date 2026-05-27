@@ -131,7 +131,7 @@ export default function GeminiConfig({
                       className={inputCls} style={{ borderRadius: '2px' }} />
                   </div>
                   <div>
-                    <label className={labelCls} title="Indicatif. Influence légèrement le rythme et le registre de lecture. Gemini n'a pas de voix spécifiques par tranche d'âge — deux voix masculines resteront distinctes quelle que soit l'âge renseigné."><span className="underline decoration-dotted cursor-help">Âge</span></label>
+                    <label className={labelCls} title="N'a d'effet que sur le script généré par l'IA (Claude adapte les répliques au personnage). Aucun impact sur l'audio — Gemini TTS ne dispose pas de voix spécifiques par tranche d'âge."><span className="underline decoration-dotted cursor-help">Âge</span></label>
                     <input type="text" value={profile.age} placeholder="17 ans, adulte..."
                       onChange={e => updateProfile(spk.label, 'age', e.target.value)}
                       className={inputCls} style={{ borderRadius: '2px' }} />
@@ -140,7 +140,7 @@ export default function GeminiConfig({
 
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <div>
-                    <label className={labelCls} title="Impact modéré sur le ton de lecture. Un 'client impatient' ne sonnera pas pareil qu'une 'hôtelière professionnelle'. Influence aussi la qualité du script généré par l'IA."><span className="underline decoration-dotted cursor-help">Rôle / Fonction</span></label>
+                    <label className={labelCls} title="N'a d'effet que sur le script généré par l'IA (Claude écrit des répliques cohérentes avec le rôle). Aucun impact direct sur l'audio."><span className="underline decoration-dotted cursor-help">Rôle / Fonction</span></label>
                     <input type="text" value={profile.role} placeholder="client, hôtelière..."
                       onChange={e => updateProfile(spk.label, 'role', e.target.value)}
                       className={inputCls} style={{ borderRadius: '2px' }} />
@@ -154,7 +154,7 @@ export default function GeminiConfig({
                 </div>
 
                 <div>
-                  <label className={labelCls} title="Impact modéré sur le registre de lecture. Combiné au registre émotionnel, renforce la cohérence du personnage sur toute la durée du dialogue. Exemples efficaces : 'chaleureux et direct', 'nerveux, parle vite'."><span className="underline decoration-dotted cursor-help">Personnalité / Traits</span> <span className="text-jfb-gris-cl">(optionnel)</span></label>
+                  <label className={labelCls} title="N'a d'effet que sur le script généré par l'IA (Claude adapte le ton et les formulations au caractère du personnage). Aucun impact direct sur l'audio."><span className="underline decoration-dotted cursor-help">Personnalité / Traits</span> <span className="text-jfb-gris-cl">(optionnel)</span></label>
                   <input type="text" value={profile.personality} placeholder="chaleureux, direct, timide..."
                     onChange={e => updateProfile(spk.label, 'personality', e.target.value)}
                     className={inputCls} style={{ borderRadius: '2px' }} />
