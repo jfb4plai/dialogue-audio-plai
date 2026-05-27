@@ -28,6 +28,7 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated, eng
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [niveau, setNiveau] = useState('')
+  const [classe, setClasse] = useState('')
   const [filiere, setFiliere] = useState('')
   const [contexte, setContexte] = useState('')
   const [sujet, setSujet] = useState('')
@@ -49,6 +50,7 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated, eng
       if (data.error) throw new Error(data.error)
       dispatch({ type: 'SET_NIVEAU', payload: niveau })
       dispatch({ type: 'SET_VOCABULAIRE', payload: vocabulaire })
+      dispatch({ type: 'SET_CLASSE', payload: classe })
       onGenerated(data.script)
       setOpen(false)
     } catch (err) {
@@ -105,10 +107,18 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated, eng
                 <option value="C1">C1 — Autonome</option>
                 <option value="C2">C2 — Maîtrise</option>
               </select>
+              <p className="text-xs text-gray-400 mt-1 leading-snug">Cadre Européen Commun de Référence pour les Langues — calibre la complexité du vocabulaire, des structures grammaticales et la longueur des répliques.</p>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Filière / Domaine <span className="text-gray-400">(optionnel)</span></label>
               <input type="text" value={filiere} onChange={e => setFiliere(e.target.value)} placeholder="cuisine, tourisme, santé..." className="w-full text-sm border border-jfb-bordure px-2 py-1.5 bg-white" style={{ borderRadius: '2px' }} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Classe <span className="text-gray-400">(optionnel — info uniquement)</span></label>
+              <input type="text" value={classe} onChange={e => setClasse(e.target.value)} placeholder="ex: 3e secondaire, 4TEC, CP…" className="w-full text-sm border border-jfb-bordure px-2 py-1.5 bg-white" style={{ borderRadius: '2px' }} />
+              <p className="text-xs text-gray-400 mt-1 leading-snug">Non envoyé à l&apos;IA — sert à identifier pour quelle classe ce dialogue a été créé.</p>
             </div>
           </div>
           <div>

@@ -20,6 +20,7 @@ export interface WizardState {
   voices: VoicesConfig
   niveau: string
   vocabulaire: string
+  classe: string
 }
 
 type Action =
@@ -37,6 +38,7 @@ type Action =
   | { type: 'SET_VOICES';            payload: VoicesConfig }
   | { type: 'SET_NIVEAU';            payload: string }
   | { type: 'SET_VOCABULAIRE';       payload: string }
+  | { type: 'SET_CLASSE';            payload: string }
   | { type: 'RESET' }
 
 const initialState: WizardState = {
@@ -57,6 +59,7 @@ const initialState: WizardState = {
   voices: DEFAULT_VOICES,
   niveau: '',
   vocabulaire: '',
+  classe: '',
 }
 
 const SESSION_KEY = 'da_wizard_state'
@@ -77,6 +80,7 @@ function reducer(state: WizardState, action: Action): WizardState {
     case 'SET_VOICES':            return { ...state, voices: action.payload }
     case 'SET_NIVEAU':            return { ...state, niveau: action.payload }
     case 'SET_VOCABULAIRE':       return { ...state, vocabulaire: action.payload }
+    case 'SET_CLASSE':            return { ...state, classe: action.payload }
     case 'RESET':                 return { ...initialState, voices: state.voices, geminiVoices: state.geminiVoices }
     default:                      return state
   }
@@ -134,6 +138,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       if (saved.result)                        dispatch({ type: 'SET_RESULT',            payload: saved.result })
       if (saved.niveau !== undefined)          dispatch({ type: 'SET_NIVEAU',            payload: saved.niveau ?? '' })
       if (saved.vocabulaire !== undefined)     dispatch({ type: 'SET_VOCABULAIRE',       payload: saved.vocabulaire ?? '' })
+      if (saved.classe !== undefined)          dispatch({ type: 'SET_CLASSE',            payload: saved.classe ?? '' })
     }
     setIsHydrated(true)
   }, [])
