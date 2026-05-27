@@ -52,7 +52,7 @@ export default function GeminiConfig({
 
       {/* Tooltip hint */}
       <div className="text-xs text-jfb-gris border border-dashed border-jfb-bordure px-3 py-2" style={{ borderRadius: '2px' }}>
-        Survolez les étiquettes <span className="underline decoration-dotted cursor-help">soulignées</span> pour comprendre l'impact réel de chaque champ sur l'audio généré.
+        Survolez les étiquettes <span className="underline decoration-dotted cursor-help">soulignées</span> pour comprendre l'impact réel de chaque champ sur l'audio généré. Les paramètres affinent l'interprétation — ils ne modifient pas le timbre fondamental d'une voix.
       </div>
 
       {/* Profils avancés toggle */}
@@ -91,7 +91,7 @@ export default function GeminiConfig({
 
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div>
-                <label className={labelCls} title="Impact fort et direct. C'est le principal paramètre audio — chaque voix a un timbre et un caractère distincts. Choisir des voix contrastées donne les meilleurs résultats."><span className="underline decoration-dotted cursor-help">Voix</span></label>
+                <label className={labelCls} title="Paramètre déterminant. Chaque voix a un timbre fondamental que les autres paramètres ne peuvent pas modifier — deux locuteurs avec la même voix resteront perceptivement proches, quelle que soit la configuration. Pour une distinction claire à l'oreille, choisir deux voix contrastées est indispensable."><span className="underline decoration-dotted cursor-help">Voix</span></label>
                 <select
                   value={profile.voice}
                   onChange={e => updateProfile(spk.label, 'voice', e.target.value)}
