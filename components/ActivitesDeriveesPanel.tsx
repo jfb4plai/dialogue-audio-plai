@@ -47,6 +47,17 @@ const STOPWORDS = new Set([
   'il','i','le','di','in','con','per','sono','ho','che','mi','ti','si','ci','vi','lo','li',
 ])
 
+const LOCALE_LANG_LABEL: Record<string, string> = {
+  nl_BE: 'néerlandais (BE)',
+  nl_NL: 'néerlandais (NL)',
+  fr_FR: 'français',
+  fr_BE: 'français (BE)',
+  de_DE: 'allemand',
+  en_GB: 'anglais (UK)',
+  es_ES: 'espagnol',
+  it_IT: 'italien',
+}
+
 const TRUE_FALSE_LABELS: Record<string, [string, string]> = {
   nl_BE: ['Waar', 'Niet waar'],
   nl_NL: ['Waar', 'Niet waar'],
@@ -238,7 +249,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers, nivea
     })
     const csv = BOM + [header, ...rows].join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    downloadBlob(blob, 'lexique-flashplai.csv')
+    downloadBlob(blob, `lexique-${locale}-flashplai.csv`)
   }
 
   const exportLexiqueDocx = async () => {
@@ -352,6 +363,9 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers, nivea
                     Régénérer
                   </button>
                 </div>
+                <p className="text-[10px] text-jfb-gris-cl mt-1">
+                  Dans FlashPLAI : langue Q = <strong>{LOCALE_LANG_LABEL[locale] ?? locale}</strong> · langue R = <strong>français</strong>
+                </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse">
