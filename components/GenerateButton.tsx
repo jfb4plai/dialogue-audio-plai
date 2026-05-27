@@ -85,11 +85,20 @@ export default function GenerateButton({ onGenerate, disabled }: Props) {
           )}
         </div>
       )}
-      {errorMsg && (
-        <div className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2" style={{ borderRadius: '2px' }}>
-          {errorMsg}
-        </div>
-      )}
+      {errorMsg && (() => {
+        const isQuota = errorMsg.includes('journalier') || errorMsg.includes('per_model_per_day') || errorMsg.includes('PerDay')
+        return (
+          <div className={`mt-3 text-sm px-3 py-2 border ${isQuota ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-red-600 bg-red-50 border-red-200'}`} style={{ borderRadius: '2px' }}>
+            {isQuota ? (
+              <>
+                <strong>Quota journalier atteint.</strong>{' '}
+                {errorMsg.match(/Réessayez dans [\w]+/)?.[0] ?? 'Réessayez demain.'}{' '}
+                La génération Gemini TTS est limitée à 100 appels/jour sur le plan gratuit.
+              </>
+            ) : errorMsg}
+          </div>
+        )
+      })()}
     </div>
   )
 }
