@@ -186,7 +186,11 @@ export default function AudioResult({ result }: Props) {
           />
         ) : (
           <div className="w-48 h-48 border border-jfb-bordure flex items-center justify-center bg-jfb-subtil" style={{ borderRadius: '2px' }}>
-            <span className="text-xs text-jfb-gris text-center px-4">QR code non disponible</span>
+            <span className="text-xs text-jfb-gris text-center px-4">
+              {result.audio_url
+                ? 'QR code en cours de génération…'
+                : 'QR code indisponible — l\'upload Internet Archive a échoué. L\'audio est accessible localement via le lecteur ci-dessus.'}
+            </span>
           </div>
         )}
         <p className="text-xs text-jfb-gris mt-2 text-center">
@@ -214,19 +218,31 @@ export default function AudioResult({ result }: Props) {
 
       {/* Buttons */}
       <div className="flex flex-wrap gap-2">
-        <a
-          href={`/api/download?url=${encodeURIComponent(result.audio_url)}`}
-          download="dialogue.mp3"
-          className="px-4 py-2 bg-jfb-noir text-white text-sm font-medium hover:bg-jfb-noir-doux" style={{ borderRadius: '2px' }}
-        >
-          Télécharger MP3
-        </a>
+        {result.audio_url ? (
+          <a
+            href={`/api/download?url=${encodeURIComponent(result.audio_url)}`}
+            download="dialogue.mp3"
+            className="px-4 py-2 bg-jfb-noir text-white text-sm font-medium hover:bg-jfb-noir-doux" style={{ borderRadius: '2px' }}
+          >
+            Télécharger MP3
+          </a>
+        ) : (
+          <span
+            title="Lien indisponible — Internet Archive n'a pas pu recevoir le fichier. Régénérez le dialogue pour obtenir un lien de partage."
+            className="px-4 py-2 bg-jfb-subtil text-jfb-gris border border-jfb-bordure text-sm font-medium cursor-not-allowed opacity-50" style={{ borderRadius: '2px' }}
+          >
+            Télécharger MP3
+          </span>
+        )}
         <button onClick={downloadQR}
-          className="px-4 py-2 bg-jfb-subtil text-jfb-gris border border-jfb-bordure text-sm font-medium hover:bg-jfb-beige" style={{ borderRadius: '2px' }}>
+          disabled={!result.qr_base64}
+          className="px-4 py-2 bg-jfb-subtil text-jfb-gris border border-jfb-bordure text-sm font-medium hover:bg-jfb-beige disabled:opacity-50 disabled:cursor-not-allowed" style={{ borderRadius: '2px' }}>
           Télécharger QR PNG
         </button>
         <button onClick={copyLink}
-          className="px-4 py-2 bg-jfb-subtil text-jfb-gris border border-jfb-bordure text-sm font-medium hover:bg-jfb-beige" style={{ borderRadius: '2px' }}>
+          disabled={!result.audio_url}
+          title={!result.audio_url ? 'Lien indisponible' : undefined}
+          className="px-4 py-2 bg-jfb-subtil text-jfb-gris border border-jfb-bordure text-sm font-medium hover:bg-jfb-beige disabled:opacity-50 disabled:cursor-not-allowed" style={{ borderRadius: '2px' }}>
           Copier le lien
         </button>
       </div>
