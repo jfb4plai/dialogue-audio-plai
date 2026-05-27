@@ -225,6 +225,22 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers, nivea
     downloadBlob(await Packer.toBlob(doc), 'vrai-faux.docx')
   }
 
+  const exportFlashCSV = () => {
+    if (!lexiqueItems) return
+    const selected = lexiqueItems.filter((_, i) => lexiqueChecked.has(i))
+    if (selected.length === 0) return
+    const BOM = '﻿'
+    const header = 'Mot;Traduction'
+    const rows = selected.map(item => {
+      const word = item.word.replace(/;/g, ',').replace(/"/g, '""')
+      const tr = item.translation.replace(/;/g, ',').replace(/"/g, '""')
+      return `${word};${tr}`
+    })
+    const csv = BOM + [header, ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    downloadBlob(blob, 'lexique-flashplai.csv')
+  }
+
   const exportLexiqueDocx = async () => {
     if (!lexiqueItems) return
     const selected = lexiqueItems.filter((_, i) => lexiqueChecked.has(i))
@@ -312,13 +328,25 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers, nivea
                 <p className="text-xs text-jfb-gris">
                   {lexiqueChecked.size}/{lexiqueItems.length} mots sélectionnés — décochez les mots à exclure
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <button onClick={exportLexiqueDocx}
                     disabled={lexiqueChecked.size === 0}
                     className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige disabled:opacity-40"
                     style={{ borderRadius: '2px' }}>
                     Télécharger .docx ({lexiqueChecked.size})
                   </button>
+                  <button onClick={exportFlashCSV}
+                    disabled={lexiqueChecked.size === 0}
+                    title="Génère un CSV importable dans FlashPLAI (cartes mémoire)"
+                    className="text-xs border border-jfb-rose text-jfb-rose px-3 py-1 hover:bg-jfb-beige disabled:opacity-40"
+                    style={{ borderRadius: '2px' }}>
+                    FlashPLAI .csv ({lexiqueChecked.size})
+                  </button>
+                  <a href="https://flashfwb-cd2m.vercel.app" target="_blank" rel="noopener noreferrer"
+                    className="text-xs border border-jfb-bordure px-3 py-1 hover:bg-jfb-beige text-jfb-gris"
+                    style={{ borderRadius: '2px' }}>
+                    Ouvrir FlashPLAI ↗
+                  </a>
                   <button onClick={() => { setLexiqueItems(null); setLexiqueChecked(new Set()); loadLexique() }}
                     className="text-xs text-jfb-gris underline hover:text-jfb-noir">
                     Régénérer
