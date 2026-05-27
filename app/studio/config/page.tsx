@@ -183,15 +183,15 @@ export default function ConfigPage() {
                   − Retirer
                 </button>
               )}
-              {speakers.length < 2 && (
+              {speakers.length < 4 && (
                 <button onClick={addSpeaker}
                   className="text-xs px-2 py-1 border border-jfb-bordure text-jfb-rose hover:border-jfb-rose font-medium"
                   style={{ borderRadius: '2px' }}>
                   + Ajouter
                 </button>
               )}
-              {speakers.length >= 2 && (
-                <span className="text-[10px] text-jfb-gris-cl">2 locuteurs max (Gemini TTS)</span>
+              {speakers.length > 2 && (
+                <span className="text-[10px] text-jfb-gris-cl">génération plus lente (3-4 locuteurs)</span>
               )}
             </div>
           </div>
