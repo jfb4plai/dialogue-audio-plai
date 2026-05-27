@@ -6,11 +6,10 @@ import { SPEAKER_COLORS } from '@/lib/voices'
 
 const STYLES = [
   { value: '', label: 'Neutre (par défaut)' },
+  { value: 'excited', label: 'Enthousiaste · débit rapide' },
+  { value: 'hesitant', label: 'Hésitant · débit lent, pauses' },
   { value: 'cheerful', label: 'Joyeux (cheerful)' },
   { value: 'serious', label: 'Sérieux (serious)' },
-  { value: 'hesitant', label: 'Hésitant (hesitant)' },
-  { value: 'warm', label: 'Chaleureux (warm)' },
-  { value: 'excited', label: 'Enthousiaste (excited)' },
   { value: 'thoughtful', label: 'Réfléchi (thoughtful)' },
   { value: 'professional', label: 'Professionnel' },
 ]
@@ -91,7 +90,7 @@ export default function GeminiConfig({
 
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div>
-                <label className={labelCls} title="Paramètre déterminant. Chaque voix a un timbre fondamental que les autres paramètres ne peuvent pas modifier — deux locuteurs avec la même voix resteront perceptivement proches, quelle que soit la configuration. Pour une distinction claire à l'oreille, choisir deux voix contrastées est indispensable."><span className="underline decoration-dotted cursor-help">Voix</span></label>
+                <label className={labelCls} title="Paramètre déterminant. 16 voix disponibles : 8 féminines et 8 masculines, choisies pour leur contraste maximal — même un dialogue à 4 locuteurs du même sexe dispose de 4 voix clairement distinctes. Pour différencier deux locuteurs, privilégier des voix aux caractères opposés (ex : 'jeune, légère' vs 'mature, posée')."><span className="underline decoration-dotted cursor-help">Voix</span></label>
                 <select
                   value={profile.voice}
                   onChange={e => updateProfile(spk.label, 'voice', e.target.value)}
@@ -110,9 +109,9 @@ export default function GeminiConfig({
                 </select>
               </div>
               <div>
-                <label className={labelCls} title="Impact réel sur la prosodie depuis la dernière mise à jour. Influe sur le rythme, l'intonation et l'intensité de chaque réplique. Combiné à la voix, c'est le levier le plus efficace."><span className="underline decoration-dotted cursor-help">Registre émotionnel</span></label>
+                <label className={labelCls} title="Levier de différenciation principal après la voix. Agit sur le rythme et l'intonation — pas sur le timbre fondamental. Pour deux locuteurs du même sexe, combiner 'Enthousiaste' (débit rapide) et 'Hésitant' (débit lent) donne le contraste perceptif le plus fort. 'Chaleureux (warm)' a été retiré car il efface les différences entre voix féminines calmes."><span className="underline decoration-dotted cursor-help">Registre émotionnel</span></label>
                 <select
-                  value={profile.style}
+                  value={profile.style === 'warm' ? '' : profile.style}
                   onChange={e => updateProfile(spk.label, 'style', e.target.value)}
                   className={inputCls} style={{ borderRadius: '2px' }}
                 >
