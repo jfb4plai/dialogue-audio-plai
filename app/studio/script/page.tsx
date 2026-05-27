@@ -104,6 +104,8 @@ export default function ScriptPage() {
 
     let res: GenerateResult
     if (effectiveEngine === 'gemini') {
+      // Gemini TTS preview : 2 locuteurs maximum
+      const profilesForGemini = geminiProfiles.slice(0, 2)
       const r = await fetch('/api/generate-gemini', {
         method: 'POST',
         headers: {
@@ -113,7 +115,7 @@ export default function ScriptPage() {
         body: JSON.stringify({
           script: scriptToGenerate,
           locale,
-          speakers: geminiProfiles.map(p => ({
+          speakers: profilesForGemini.map(p => ({
             label: p.label,
             voice: p.voice,
             name: p.name,

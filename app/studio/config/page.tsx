@@ -175,7 +175,7 @@ export default function ConfigPage() {
                 </span>
               ))}
             </div>
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2 ml-auto items-center">
               {speakers.length > 2 && (
                 <button onClick={removeSpeaker}
                   className="text-xs px-2 py-1 border border-jfb-bordure text-jfb-gris hover:border-red-400 hover:text-red-500"
@@ -183,12 +183,15 @@ export default function ConfigPage() {
                   − Retirer
                 </button>
               )}
-              {speakers.length < 4 && (
+              {speakers.length < 2 && (
                 <button onClick={addSpeaker}
                   className="text-xs px-2 py-1 border border-jfb-bordure text-jfb-rose hover:border-jfb-rose font-medium"
                   style={{ borderRadius: '2px' }}>
                   + Ajouter
                 </button>
+              )}
+              {speakers.length >= 2 && (
+                <span className="text-[10px] text-jfb-gris-cl">2 locuteurs max (Gemini TTS)</span>
               )}
             </div>
           </div>
