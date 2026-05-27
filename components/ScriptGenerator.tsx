@@ -95,8 +95,16 @@ export default function ScriptGenerator({ locale, speakerCount, onGenerated, eng
           )}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Niveau <span className="text-gray-400">(optionnel)</span></label>
-              <input type="text" value={niveau} onChange={e => setNiveau(e.target.value)} placeholder="S5 pro, débutant, adulte..." className="w-full text-sm border border-jfb-bordure px-2 py-1.5 bg-white" style={{ borderRadius: '2px' }} />
+              <label className="block text-xs font-medium text-gray-600 mb-1">Niveau CECRL</label>
+              <select value={niveau} onChange={e => setNiveau(e.target.value)} className="w-full text-sm border border-jfb-bordure px-2 py-1.5 bg-white" style={{ borderRadius: '2px' }}>
+                <option value="">— non précisé —</option>
+                <option value="A1">A1 — Débutant</option>
+                <option value="A2">A2 — Élémentaire</option>
+                <option value="B1">B1 — Intermédiaire</option>
+                <option value="B2">B2 — Avancé</option>
+                <option value="C1">C1 — Autonome</option>
+                <option value="C2">C2 — Maîtrise</option>
+              </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Filière / Domaine <span className="text-gray-400">(optionnel)</span></label>

@@ -29,7 +29,7 @@ const EXAMPLES = [
 export default function ScriptPage() {
   const { state, dispatch, isHydrated } = useWizard()
   const router = useRouter()
-  const { mode, locale, engine, speakers, script, geminiProfiles, silenceMs, ambient, ambientIntensity, voices } = state
+  const { mode, locale, niveau, engine, speakers, script, geminiProfiles, silenceMs, ambient, ambientIntensity, voices } = state
 
   const [source, setSource] = useState<Source>('ai-form')
   const [error, setError] = useState<string | null>(null)
@@ -64,6 +64,7 @@ export default function ScriptPage() {
       form.append('locale', locale)
       form.append('nb_locuteurs', String(speakers.length))
       form.append('mode', mode ?? 'dialogue')
+      if (niveau) form.append('niveau', niveau)
       if (engine === 'gemini' && geminiProfiles.length) {
         form.append('gemini_profiles', JSON.stringify(geminiProfiles))
       }

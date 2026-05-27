@@ -50,7 +50,15 @@ export async function POST(req: NextRequest) {
   } = body
 
   const vocNote = vocabulaire.trim() ? `\n- Vocabulaire à inclure obligatoirement : ${vocabulaire.trim()}` : ''
-  const niveauNote = niveau.trim() ? `\n- Niveau : ${niveau.trim()}` : ''
+  const CEFR_DESC: Record<string, string> = {
+    A1: 'A1 — phrases de 5 à 7 mots maximum, vocabulaire concret des 500 mots les plus fréquents, présent et impératif uniquement, zéro expression idiomatique',
+    A2: 'A2 — phrases simples de 8 à 12 mots, vocabulaire des situations quotidiennes (~1500 mots), passé composé et futur proche autorisés',
+    B1: 'B1 — phrases variées jusqu\'à 15 mots, vocabulaire intermédiaire, expressions idiomatiques courantes, quelques subordonnées',
+    B2: 'B2 — phrases complexes, registre semi-soutenu, argumentation structurée, connecteurs logiques, nuances de sens',
+    C1: 'C1 — registres variés, structures syntaxiques sophistiquées, vocabulaire étendu, implicite et sous-entendu assumés',
+    C2: 'C2 — maîtrise parfaite, précision lexicale maximale, registre soutenu, jeu sur les subtilités rhétoriques',
+  }
+  const niveauNote = niveau.trim() ? `\n- Niveau CECRL : ${CEFR_DESC[niveau.trim()] ?? niveau.trim()} — adapter STRICTEMENT la longueur des répliques, le choix lexical et la complexité syntaxique à ce niveau` : ''
   const filiereNote = filiere.trim() ? `\n- Filière / domaine : ${filiere.trim()}` : ''
   const contexteNote = contexte.trim() ? `\n- Contexte situationnel : ${contexte.trim()}` : ''
   const letters = ['A', 'B', 'C', 'D'].slice(0, Math.max(1, nb_locuteurs))

@@ -14,7 +14,7 @@ const LABELS = ['A', 'B', 'C', 'D']
 export default function ConfigPage() {
   const { state, dispatch, isHydrated } = useWizard()
   const router = useRouter()
-  const { mode, locale, engine, speakers, voices, geminiVoices, geminiProfiles, ambient, ambientIntensity, silenceMs } = state
+  const { mode, locale, niveau, engine, speakers, voices, geminiVoices, geminiProfiles, ambient, ambientIntensity, silenceMs } = state
 
   // Garde-fou : attend la hydratation sessionStorage avant de vérifier le mode
   useEffect(() => {
@@ -131,6 +131,27 @@ export default function ConfigPage() {
           <LanguageSelector voices={voices} selected={locale} onChange={l => dispatch({ type: 'SET_LOCALE', payload: l })} />
         </div>
 
+        {/* Niveau CECRL */}
+        <div>
+          <div className="mb-2 text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Niveau dans la langue-cible</div>
+          <select
+            value={niveau}
+            onChange={e => dispatch({ type: 'SET_NIVEAU', payload: e.target.value })}
+            className="w-full border border-jfb-bordure px-3 py-2 bg-white text-sm text-jfb-noir focus:outline-none focus:ring-2 focus:ring-jfb-rose"
+            style={{ borderRadius: '2px' }}
+          >
+            <option value="">— Choisir un niveau —</option>
+            <option value="A1">A1 — Débutant (mots isolés, phrases très courtes)</option>
+            <option value="A2">A2 — Élémentaire (phrases simples, situations courantes)</option>
+            <option value="B1">B1 — Intermédiaire (autonomie de base, sujets familiers)</option>
+            <option value="B2">B2 — Avancé (fluidité, argumentation, nuances)</option>
+            <option value="C1">C1 — Autonome (registres variés, spontanéité)</option>
+            <option value="C2">C2 — Maîtrise (précision, subtilité, registre soutenu)</option>
+          </select>
+          {!niveau && (
+            <p className="mt-1 text-xs text-amber-600">Ce choix influence le vocabulaire et la complexité du script généré.</p>
+          )}
+        </div>
 
         {/* Podcast : Gemini forcé */}
         {isPodcast && (

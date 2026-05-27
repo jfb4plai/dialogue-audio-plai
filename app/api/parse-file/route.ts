@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
   const locale     = (formData.get('locale') as string)     || 'nl_BE'
   const nbStr      = (formData.get('nb_locuteurs') as string) || '2'
   const mode       = (formData.get('mode') as string)       || 'dialogue'
+  const niveau     = (formData.get('niveau') as string)     || ''
   const profilesRaw = formData.get('gemini_profiles') as string | null
 
   if (!fileEntry || !(fileEntry instanceof File)) {
@@ -103,6 +104,15 @@ export async function POST(req: NextRequest) {
 
   const isPodcast = mode === 'podcast'
 
+  const CEFR_DESC: Record<string, string> = {
+    A1: 'A1 — phrases de 5 à 7 mots max, vocabulaire concret des 500 mots les plus fréquents, présent et impératif uniquement',
+    A2: 'A2 — phrases simples 8-12 mots, vocabulaire quotidien (~1500 mots), passé composé et futur proche autorisés',
+    B1: 'B1 — phrases variées jusqu\'à 15 mots, vocabulaire intermédiaire, expressions idiomatiques courantes',
+    B2: 'B2 — phrases complexes, registre semi-soutenu, argumentation, connecteurs logiques, nuances',
+    C1: 'C1 — registres variés, structures sophistiquées, vocabulaire étendu, implicite assumé',
+    C2: 'C2 — maîtrise parfaite, précision lexicale maximale, registre soutenu',
+  }
+  const niveauNote = niveau.trim() ? `\n6. NIVEAU CECRL STRICT : ${CEFR_DESC[niveau.trim()] ?? niveau.trim()} — adapter TOUTES les répliques à ce niveau sans exception` : ''
   // Appel 1 — génération du contenu pur (sans structure d'épisodes)
   const systemPrompt = `Tu génères des scripts de ${mode} pédagogiques pour des enseignants de la Fédération Wallonie-Bruxelles, à partir d'un document source.
 
@@ -111,7 +121,7 @@ RÈGLES ABSOLUES DE FORMAT :
 2. ZÉRO markdown : pas de **, *, #, _, tirets de liste
 3. ZÉRO titre, commentaire, numérotation — uniquement les répliques
 4. LANGUE STRICTE : TOUT le texte en ${langue} — aucun mot dans une autre langue
-5. CONCLUSION OBLIGATOIRE : les 2 dernières répliques closent naturellement l'échange
+5. CONCLUSION OBLIGATOIRE : les 2 dernières répliques closent naturellement l'échange${niveauNote}
 
 EXEMPLE :
 A: Goedemorgen, kan ik u helpen?
