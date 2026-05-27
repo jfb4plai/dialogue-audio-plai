@@ -1,10 +1,14 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
+import { useWizard } from '@/lib/wizard-context'
 import { DialogueRecord } from '@/types/dialogue'
 
 export default function HistoryPanel() {
   const [records, setRecords] = useState<DialogueRecord[]>([])
+  const { dispatch } = useWizard()
+  const router = useRouter()
 
   useEffect(() => {
     const sb = getSupabase()
@@ -15,7 +19,7 @@ export default function HistoryPanel() {
       if (!user) return
       const { data } = await sb
         .from('dialogues')
-        .select('id, language, script_text, audio_url, duration_seconds, created_at')
+        .select('id, language, script_text, speakers, audio_url, duration_seconds, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10)
@@ -27,6 +31,16 @@ export default function HistoryPanel() {
     const { data: listener } = sb.auth.onAuthStateChange(() => load())
     return () => listener.subscription.unsubscribe()
   }, [])
+
+  const handleReuse = (record: DialogueRecord) => {
+    dispatch({ type: 'SET_MODE', payload: 'dialogue' })
+    dispatch({ type: 'SET_LOCALE', payload: record.language })
+    if (record.speakers?.length) {
+      dispatch({ type: 'SET_SPEAKERS', payload: record.speakers })
+    }
+    dispatch({ type: 'SET_SCRIPT', payload: record.script_text })
+    router.push('/studio/script')
+  }
 
   if (records.length === 0) return null
 
@@ -54,12 +68,22 @@ export default function HistoryPanel() {
                 </p>
               )}
             </div>
-            {r.audio_url && (
-              <a href={r.audio_url} target="_blank" rel="noopener noreferrer"
-                className="ml-3 flex-shrink-0 text-xs text-jfb-rose hover:underline">
-                Écouter
-              </a>
-            )}
+            <div className="ml-3 flex-shrink-0 flex items-center gap-3">
+              <button
+                onClick={() => handleReuse(r)}
+                className="text-xs text-jfb-gris border border-jfb-bordure px-2 py-1 hover:border-jfb-noir hover:text-jfb-noir transition-colors"
+                style={{ borderRadius: '2px' }}
+                title="Recharger ce script dans l'éditeur pour le modifier"
+              >
+                Réutiliser
+              </button>
+              {r.audio_url && (
+                <a href={r.audio_url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-jfb-rose hover:underline">
+                  Écouter
+                </a>
+              )}
+            </div>
           </li>
         ))}
       </ul>
