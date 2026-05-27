@@ -50,6 +50,11 @@ export default function GeminiConfig({
         <span><span className="font-semibold text-jfb-rose">Voix génératives IA</span> · 500 générations/jour · Pas d'inscription requise</span>
       </div>
 
+      {/* Tooltip hint */}
+      <div className="text-xs text-jfb-gris border border-dashed border-jfb-bordure px-3 py-2" style={{ borderRadius: '2px' }}>
+        Survolez les étiquettes <span className="underline decoration-dotted cursor-help">soulignées</span> pour comprendre l'impact réel de chaque champ sur l'audio généré.
+      </div>
+
       {/* Profils avancés toggle */}
       <button
         onClick={() => setAdvanced(a => !a)}
@@ -86,7 +91,7 @@ export default function GeminiConfig({
 
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div>
-                <label className={labelCls}>Voix</label>
+                <label className={labelCls} title="Impact fort et direct. C'est le principal paramètre audio — chaque voix a un timbre et un caractère distincts. Choisir des voix contrastées donne les meilleurs résultats."><span className="underline decoration-dotted cursor-help">Voix</span></label>
                 <select
                   value={profile.voice}
                   onChange={e => updateProfile(spk.label, 'voice', e.target.value)}
@@ -105,7 +110,7 @@ export default function GeminiConfig({
                 </select>
               </div>
               <div>
-                <label className={labelCls}>Registre émotionnel</label>
+                <label className={labelCls} title="Impact réel sur la prosodie depuis la dernière mise à jour. Influe sur le rythme, l'intonation et l'intensité de chaque réplique. Combiné à la voix, c'est le levier le plus efficace."><span className="underline decoration-dotted cursor-help">Registre émotionnel</span></label>
                 <select
                   value={profile.style}
                   onChange={e => updateProfile(spk.label, 'style', e.target.value)}
@@ -120,13 +125,13 @@ export default function GeminiConfig({
               <>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <div>
-                    <label className={labelCls}>Prénom du personnage</label>
+                    <label className={labelCls} title="Utilisé par l'IA pour écrire le script (le personnage est nommé dans les répliques) et contextualise la lecture audio. Impact léger mais réel sur le registre."><span className="underline decoration-dotted cursor-help">Prénom du personnage</span></label>
                     <input type="text" value={profile.name} placeholder="Emma, Arnaud..."
                       onChange={e => updateProfile(spk.label, 'name', e.target.value)}
                       className={inputCls} style={{ borderRadius: '2px' }} />
                   </div>
                   <div>
-                    <label className={labelCls}>Âge</label>
+                    <label className={labelCls} title="Indicatif. Influence légèrement le rythme et le registre de lecture. Gemini n'a pas de voix spécifiques par tranche d'âge — deux voix masculines resteront distinctes quelle que soit l'âge renseigné."><span className="underline decoration-dotted cursor-help">Âge</span></label>
                     <input type="text" value={profile.age} placeholder="17 ans, adulte..."
                       onChange={e => updateProfile(spk.label, 'age', e.target.value)}
                       className={inputCls} style={{ borderRadius: '2px' }} />
@@ -135,13 +140,13 @@ export default function GeminiConfig({
 
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <div>
-                    <label className={labelCls}>Rôle / Fonction</label>
+                    <label className={labelCls} title="Impact modéré sur le ton de lecture. Un 'client impatient' ne sonnera pas pareil qu'une 'hôtelière professionnelle'. Influence aussi la qualité du script généré par l'IA."><span className="underline decoration-dotted cursor-help">Rôle / Fonction</span></label>
                     <input type="text" value={profile.role} placeholder="client, hôtelière..."
                       onChange={e => updateProfile(spk.label, 'role', e.target.value)}
                       className={inputCls} style={{ borderRadius: '2px' }} />
                   </div>
                   <div>
-                    <label className={labelCls}>Langue maternelle</label>
+                    <label className={labelCls} title="Peut légèrement colorer l'accentuation et le débit. Utile pour différencier un locuteur natif d'un apprenant. Impact faible mais cohérent avec les profils réels des élèves."><span className="underline decoration-dotted cursor-help">Langue maternelle</span></label>
                     <input type="text" value={profile.nativeLanguage} placeholder="français belge, néerlandais..."
                       onChange={e => updateProfile(spk.label, 'nativeLanguage', e.target.value)}
                       className={inputCls} style={{ borderRadius: '2px' }} />
@@ -149,7 +154,7 @@ export default function GeminiConfig({
                 </div>
 
                 <div>
-                  <label className={labelCls}>Personnalité / Traits <span className="text-jfb-gris-cl">(optionnel)</span></label>
+                  <label className={labelCls} title="Impact modéré sur le registre de lecture. Combiné au registre émotionnel, renforce la cohérence du personnage sur toute la durée du dialogue. Exemples efficaces : 'chaleureux et direct', 'nerveux, parle vite'."><span className="underline decoration-dotted cursor-help">Personnalité / Traits</span> <span className="text-jfb-gris-cl">(optionnel)</span></label>
                   <input type="text" value={profile.personality} placeholder="chaleureux, direct, timide..."
                     onChange={e => updateProfile(spk.label, 'personality', e.target.value)}
                     className={inputCls} style={{ borderRadius: '2px' }} />
