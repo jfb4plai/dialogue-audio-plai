@@ -98,8 +98,7 @@ export default function ScriptPage() {
     if (!scriptToGenerate.trim() || speakers.length < 2) return
     setError(null)
 
-    // Sécurité : si engine=gemini mais Gemini non configuré (pas de voix), bloquer ici
-    const effectiveEngine = (engine === 'gemini' && state.geminiVoices.length === 0) ? 'edge-tts' : engine
+    const effectiveEngine = engine
 
     const token = await getAuthToken()
 

@@ -62,7 +62,7 @@ export default function SpeakerConfig({ speakers, availableVoices, onChange }: P
             <button
               onClick={() => {
                 const voiceInfo = availableVoices.find(v => v.id === spk.voice)
-                previewVoice(spk.voice, voiceInfo?.engine ?? 'edge-tts')
+                previewVoice(spk.voice, voiceInfo?.engine ?? 'piper')
               }}
               disabled={previewingVoice === spk.voice}
               title="Écouter un extrait"

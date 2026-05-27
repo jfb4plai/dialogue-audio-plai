@@ -76,13 +76,12 @@ export default function ConfigPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [speakers, geminiVoices])
 
-  // Pour podcast → forcer Gemini
-  // Pour dialogue avec Gemini non configuré → forcer edge-tts (évite fichier vide silencieux)
+  // Gemini est le moteur par défaut — forcer si pas encore défini
   useEffect(() => {
-    if (mode === 'podcast' && engine !== 'gemini') {
+    if (engine !== 'gemini') {
       dispatch({ type: 'SET_ENGINE', payload: 'gemini' })
     }
-  }, [mode, engine, geminiVoices.length, dispatch])
+  }, [mode, engine, dispatch])
 
   const availableVoices = voices[locale]?.voices ?? DEFAULT_VOICES[locale]?.voices ?? []
 
