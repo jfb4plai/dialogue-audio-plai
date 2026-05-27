@@ -23,11 +23,11 @@ const LOCALE_NAMES: Record<string, string> = {
 }
 
 export default function ScriptGenerator({ locale, speakerCount, onGenerated, engine, geminiProfiles }: Props) {
-  const { dispatch } = useWizard()
+  const { state, dispatch } = useWizard()
   const [open, setOpen] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [niveau, setNiveau] = useState('')
+  const [niveau, setNiveau] = useState(state.niveau ?? '')
   const [classe, setClasse] = useState('')
   const [filiere, setFiliere] = useState('')
   const [contexte, setContexte] = useState('')
