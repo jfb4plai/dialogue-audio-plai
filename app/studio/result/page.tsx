@@ -32,7 +32,7 @@ export default function ResultPage() {
         </div>
         <button
           onClick={handleNew}
-          className="text-sm px-4 py-2 border border-jfb-bordure text-jfb-gris hover:border-jfb-noir hover:text-jfb-noir transition-colors"
+          className="text-sm px-4 py-2 border border-jfb-rose text-jfb-rose hover:bg-jfb-beige transition-colors"
           style={{ borderRadius: '2px' }}
         >
           + Nouveau
