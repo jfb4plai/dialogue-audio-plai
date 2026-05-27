@@ -364,7 +364,7 @@ export default function ActivitesDeriveesPanel({ script, locale, speakers, nivea
                   </button>
                 </div>
                 <p className="text-[10px] text-jfb-gris-cl mt-1">
-                  Dans FlashPLAI : langue Q = <strong>{LOCALE_LANG_LABEL[locale] ?? locale}</strong> · langue R = <strong>français</strong>
+                  Dans FlashPLAI : recto (R) = <strong>{LOCALE_LANG_LABEL[locale] ?? locale}</strong> · verso (V) = <strong>français</strong>
                 </p>
               </div>
               <div className="overflow-x-auto">
