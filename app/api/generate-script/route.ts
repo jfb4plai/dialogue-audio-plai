@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { getUserId } from '@/lib/get-user-id'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
-const rateMap = new Map<string, { count: number; resetAt: number }>()
-const MAX_PER_HOUR = 10
-const HOUR_MS = 60 * 60 * 1000
 
 const LOCALE_LABELS: Record<string, string> = {
   nl_BE: 'néerlandais de Belgique (flamand)',
@@ -19,19 +17,13 @@ const LOCALE_LABELS: Record<string, string> = {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown'
-  const now = Date.now()
-  const entry = rateMap.get(ip)
-  if (entry && now < entry.resetAt) {
-    if (entry.count >= MAX_PER_HOUR) {
-      return NextResponse.json(
-        { error: `Limite atteinte : ${MAX_PER_HOUR} générations par heure. Réessayez plus tard.` },
-        { status: 429 }
-      )
-    }
-    entry.count++
-  } else {
-    rateMap.set(ip, { count: 1, resetAt: now + HOUR_MS })
+  const userId = await getUserId(req)
+  const rl = await checkRateLimit(req, userId, { anonMax: 10, authMax: 20 })
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Limite atteinte : 10 générations par heure. Réessayez plus tard.' },
+      { status: 429 }
+    )
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -45,9 +37,23 @@ export async function POST(req: NextRequest) {
   const {
     niveau = '', filiere = '', contexte = '', sujet = '',
     nb_repliques = 20, registre = 'mixte', vocabulaire = '',
-    roles = [],          // [{label: 'A', role: '...'}, ...]
+    roles = [],
     gemini_profiles = null,
   } = body
+
+  // Input length guards
+  const LIMITS = { sujet: 300, contexte: 400, vocabulaire: 300, filiere: 150 }
+  if (String(sujet).length > LIMITS.sujet || String(contexte).length > LIMITS.contexte ||
+      String(vocabulaire).length > LIMITS.vocabulaire || String(filiere).length > LIMITS.filiere) {
+    return NextResponse.json({ error: 'Un ou plusieurs champs dépassent la longueur maximale autorisée.' }, { status: 400 })
+  }
+  if (Array.isArray(roles) && roles.some((r: { role?: string }) => String(r.role ?? '').length > 200)) {
+    return NextResponse.json({ error: 'Description de rôle trop longue (max 200 caractères).' }, { status: 400 })
+  }
+  const nbRep = Number(nb_repliques)
+  if (!Number.isInteger(nbRep) || nbRep < 2 || nbRep > 80) {
+    return NextResponse.json({ error: 'Nombre de répliques invalide (2–80).' }, { status: 400 })
+  }
 
   // ── Niveau CECRL ────────────────────────────────────────────────────────────
   const CEFR_DESC: Record<string, string> = {

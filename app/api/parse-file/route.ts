@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import mammoth from 'mammoth'
+import { getUserId } from '@/lib/get-user-id'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
-const rateMap = new Map<string, { count: number; resetAt: number }>()
-const MAX_PER_HOUR = 10
-const HOUR_MS = 60 * 60 * 1000
 
 const LOCALE_LABELS: Record<string, string> = {
   nl_BE: 'néerlandais de Belgique (flamand)',
@@ -23,20 +21,13 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 const MAX_TEXT_CHARS = 15_000           // tronque le document avant envoi à Claude
 
 export async function POST(req: NextRequest) {
-  // Rate limiting par IP
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown'
-  const now = Date.now()
-  const entry = rateMap.get(ip)
-  if (entry && now < entry.resetAt) {
-    if (entry.count >= MAX_PER_HOUR) {
-      return NextResponse.json(
-        { error: `Limite atteinte : ${MAX_PER_HOUR} générations par heure. Réessayez plus tard.` },
-        { status: 429 }
-      )
-    }
-    entry.count++
-  } else {
-    rateMap.set(ip, { count: 1, resetAt: now + HOUR_MS })
+  const userId = await getUserId(req)
+  const rl = await checkRateLimit(req, userId, { anonMax: 10, authMax: 20 })
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Limite atteinte : 10 générations par heure. Réessayez plus tard.' },
+      { status: 429 }
+    )
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {

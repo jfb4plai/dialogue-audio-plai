@@ -1,23 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getUserId } from '@/lib/get-user-id'
 
 export const maxDuration = 60
-
-async function getUserId(req: NextRequest): Promise<string | null> {
-  const authHeader = req.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) return null
-  try {
-    const token = authHeader.slice(7)
-    const client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    const { data: { user } } = await client.auth.getUser(token)
-    return user?.id ?? null
-  } catch {
-    return null
-  }
-}
 
 export async function POST(req: NextRequest) {
   const body = await req.json()

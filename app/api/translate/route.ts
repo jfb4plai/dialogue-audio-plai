@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getUserId } from '@/lib/get-user-id'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const DEEPL_API_KEY = process.env.DEEPL_API_KEY ?? ''
 
@@ -34,6 +36,12 @@ async function translateWithDeepL(text: string, targetLang: string): Promise<str
 }
 
 export async function POST(req: NextRequest) {
+  const userId = await getUserId(req)
+  const rl = await checkRateLimit(req, userId, { anonMax: 10, authMax: 20 })
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'Limite atteinte : 10 traductions par heure.' }, { status: 429 })
+  }
+
   const { script, targetLang } = await req.json()
 
   if (!script || !targetLang) {

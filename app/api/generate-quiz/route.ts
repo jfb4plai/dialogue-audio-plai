@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { getUserId } from '@/lib/get-user-id'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
-const rateMap = new Map<string, { count: number; resetAt: number }>()
-const MAX_PER_HOUR = 20
-const HOUR_MS = 60 * 60 * 1000
 
 const LOCALE_LABELS: Record<string, string> = {
   nl_BE: 'néerlandais',
@@ -19,16 +17,10 @@ const LOCALE_LABELS: Record<string, string> = {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown'
-  const now = Date.now()
-  const entry = rateMap.get(ip)
-  if (entry && now < entry.resetAt) {
-    if (entry.count >= MAX_PER_HOUR) {
-      return NextResponse.json({ error: 'Limite atteinte : 20 générations par heure.' }, { status: 429 })
-    }
-    entry.count++
-  } else {
-    rateMap.set(ip, { count: 1, resetAt: now + HOUR_MS })
+  const userId = await getUserId(req)
+  const rl = await checkRateLimit(req, userId, { anonMax: 20, authMax: 40 })
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'Limite atteinte : 20 générations par heure.' }, { status: 429 })
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -38,6 +30,9 @@ export async function POST(req: NextRequest) {
   const { script, locale = 'nl_BE', question_lang = 'fr' } = await req.json()
   if (!script?.trim()) {
     return NextResponse.json({ error: 'Script manquant.' }, { status: 400 })
+  }
+  if (String(script).length > 8000) {
+    return NextResponse.json({ error: 'Script trop long (max 8 000 caractères).' }, { status: 400 })
   }
 
   const langue = LOCALE_LABELS[locale] ?? 'la langue du dialogue'
