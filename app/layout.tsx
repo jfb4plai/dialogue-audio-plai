@@ -16,8 +16,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="bg-white border-b border-jfb-bordure px-6 py-3 flex items-center justify-between">
           <Image src="/plai-logo.jpg" alt="PLAI" width={160} height={64} className="object-contain" priority />
           <div className="flex items-center gap-4">
-            <Link href="/aide" className="text-xs text-jfb-gris hover:text-jfb-rose transition-colors" title="Mode d'emploi">
-              ? Aide
+            <Link href="/aide"
+              className="text-xs font-medium text-jfb-gris border border-jfb-bordure px-3 py-1.5 hover:border-jfb-rose hover:text-jfb-rose transition-colors"
+              style={{ borderRadius: '2px' }}
+              title="Mode d'emploi — comment utiliser l'application">
+              Premiers pas
             </Link>
             <AuthWidget />
           </div>
