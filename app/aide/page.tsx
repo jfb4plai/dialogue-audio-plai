@@ -79,7 +79,7 @@ export default function AidePage() {
                     Le mode Podcast, plus avancé, permet de générer un audio plus long à partir d&apos;un document Word ou PDF — réservez-le pour plus tard.
                   </p>
                   <div className="bg-jfb-subtil border border-jfb-bordure px-3 py-2 text-xs text-jfb-gris" style={{ borderRadius: '2px' }}>
-                    Un <strong>Dialogue</strong> peut comporter jusqu&apos;à 4 personnages et 40 répliques.
+                    Un <strong>Dialogue</strong> peut comporter jusqu&apos;à 4 personnages et 60 répliques.
                   </div>
                 </div>
               </div>
