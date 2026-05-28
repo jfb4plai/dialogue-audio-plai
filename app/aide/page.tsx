@@ -1,6 +1,13 @@
+import Link from 'next/link'
+
 export default function AidePage() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
+      <div className="mb-6">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-jfb-gris hover:text-jfb-noir transition-colors">
+          ← Retour à l&apos;accueil
+        </Link>
+      </div>
       <h1 className="text-xl font-bold text-jfb-noir mb-1">Premiers pas</h1>
       <p className="text-jfb-gris text-sm mb-8">Dialogue Audio — PLAI FWB</p>
 
