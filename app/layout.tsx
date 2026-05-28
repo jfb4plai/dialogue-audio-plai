@@ -17,8 +17,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Image src="/plai-logo.jpg" alt="PLAI" width={160} height={64} className="object-contain" priority />
           <div className="flex items-center gap-4">
             <Link href="/aide"
-              className="text-xs font-medium text-jfb-gris border border-jfb-bordure px-3 py-1.5 hover:border-jfb-rose hover:text-jfb-rose transition-colors"
-              style={{ borderRadius: '2px' }}
+              className="text-xs font-semibold text-white px-3 py-1.5 transition-opacity hover:opacity-80"
+              style={{ borderRadius: '2px', backgroundColor: '#FF3399' }}
               title="Mode d'emploi — comment utiliser l'application">
               Premiers pas
             </Link>
