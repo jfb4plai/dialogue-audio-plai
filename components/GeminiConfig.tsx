@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { GeminiVoice, ElevenLabsVoice, GeminiSpeakerProfile } from '@/types/dialogue'
 import { Speaker } from '@/types/dialogue'
 import { SPEAKER_COLORS } from '@/lib/voices'
+import { getEdgeMultiVoicesForLocale } from '@/lib/voice-routing'
 
 const STYLES = [
   { value: '', label: 'Neutre (par défaut)' },
@@ -15,6 +16,7 @@ const STYLES = [
 ]
 
 interface Props {
+  locale: string
   speakers: Speaker[]
   geminiVoices: GeminiVoice[]
   elevenlabsVoices: ElevenLabsVoice[]
@@ -27,7 +29,7 @@ interface Props {
 }
 
 export default function GeminiConfig({
-  speakers, geminiVoices, elevenlabsVoices, profiles, ambient, ambientIntensity,
+  locale, speakers, geminiVoices, elevenlabsVoices, profiles, ambient, ambientIntensity,
   onProfilesChange, onAmbientChange, onAmbientIntensityChange
 }: Props) {
   const [advanced, setAdvanced] = useState(false)
@@ -36,14 +38,20 @@ export default function GeminiConfig({
     onProfilesChange(profiles.map(p => p.label === label ? { ...p, [field]: value } : p))
   }
 
-  // Mode voix : ElevenLabs si 3-4 locuteurs et configuré, sinon Gemini
-  const useEL = speakers.length >= 3 && elevenlabsVoices.length > 0
-  const activeVoices: GeminiVoice[] = useEL ? elevenlabsVoices : geminiVoices
+  // Routage moteur voix :
+  // 2 locuteurs → Gemini TTS natif
+  // 3-4 locuteurs → Edge TTS si assez de voix pour la locale, sinon ElevenLabs
+  const edgeVoices = speakers.length >= 3 ? getEdgeMultiVoicesForLocale(locale, speakers.length) : null
+  const useEdgeMulti = edgeVoices !== null
+  const useEL = speakers.length >= 3 && !useEdgeMulti && elevenlabsVoices.length > 0
+  const isGemini = speakers.length < 3  // 2 locuteurs = Gemini TTS natif
+
+  const activeVoices: GeminiVoice[] = useEdgeMulti ? edgeVoices : useEL ? elevenlabsVoices : geminiVoices
 
   const femaleVoices = activeVoices.filter(v => v.gender === 'féminin')
   const maleVoices   = activeVoices.filter(v => v.gender === 'masculin')
 
-  // Détection voix même genre — pour l'avertissement de différenciation
+  // Détection voix même genre (avertissement de différenciation)
   const profileGenders = profiles.map(p => activeVoices.find(v => v.id === p.voice)?.gender)
   const hasSameGenderPair = profileGenders.filter(Boolean).some(
     (g, i) => profileGenders.some((g2, j) => i !== j && g === g2)
@@ -56,7 +64,13 @@ export default function GeminiConfig({
     <div className="space-y-4">
 
       {/* Badge moteur actif */}
-      {useEL ? (
+      {useEdgeMulti ? (
+        <div className="text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2 flex items-center gap-2" style={{ borderRadius: '2px' }}>
+          <span className="font-semibold text-jfb-noir">Edge TTS</span>
+          <span>·</span>
+          <span>Voix locales natives · Gratuit et illimité</span>
+        </div>
+      ) : useEL ? (
         <div className="text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2 flex items-center gap-2" style={{ borderRadius: '2px' }}>
           <span className="font-semibold text-jfb-noir">ElevenLabs</span>
           <span>·</span>
@@ -70,15 +84,15 @@ export default function GeminiConfig({
         </div>
       )}
 
-      {/* Warning ElevenLabs non configuré si 3-4 locuteurs */}
-      {speakers.length >= 3 && elevenlabsVoices.length === 0 && (
+      {/* Warning : ElevenLabs requis mais non configuré (nl_NL à 4L uniquement) */}
+      {speakers.length >= 3 && !useEdgeMulti && !useEL && (
         <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2" style={{ borderRadius: '2px' }}>
-          <strong>ElevenLabs non configuré.</strong> Les dialogues à 3-4 locuteurs nécessitent ElevenLabs — contactez le Pôle PLAI pour activer cette fonctionnalité.
+          <strong>Configuration requise.</strong> Cette locale avec {speakers.length} locuteurs nécessite ElevenLabs (voix Edge TTS insuffisantes) — contactez le Pôle PLAI pour activer cette fonctionnalité.
         </div>
       )}
 
-      {/* Tooltip hint — uniquement en mode Gemini */}
-      {!useEL && (
+      {/* Tooltip hint — Gemini uniquement */}
+      {isGemini && (
         <div className="text-xs text-jfb-gris border border-dashed border-jfb-bordure px-3 py-2" style={{ borderRadius: '2px' }}>
           Survolez les étiquettes <span className="underline decoration-dotted cursor-help">soulignées</span> pour comprendre l&apos;impact réel de chaque champ sur l&apos;audio généré. Les paramètres affinent l&apos;interprétation — ils ne modifient pas le timbre fondamental d&apos;une voix.
         </div>
@@ -88,12 +102,14 @@ export default function GeminiConfig({
       {hasSameGenderPair && (
         <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2" style={{ borderRadius: '2px' }}>
           <strong>Deux locuteurs ou plus ont des voix du même genre.</strong>{' '}
-          Pour les distinguer à l&apos;écoute, combinez des registres contrastés : <em>Enthousiaste</em> (débit rapide) pour l&apos;un, <em>Hésitant</em> (débit lent) pour l&apos;autre.
+          {isGemini
+            ? <>Pour les distinguer à l&apos;écoute, combinez des registres contrastés : <em>Enthousiaste</em> (débit rapide) pour l&apos;un, <em>Hésitant</em> (débit lent) pour l&apos;autre.</>
+            : <>Pour les distinguer à l&apos;écoute, choisissez des voix aux caractères opposés (grave/aigu, rythmé/posé).</>}
         </div>
       )}
 
-      {/* Profils avancés toggle — uniquement en mode Gemini */}
-      {!useEL && (
+      {/* Profils avancés toggle — Gemini uniquement */}
+      {isGemini && (
         <button
           onClick={() => setAdvanced(a => !a)}
           className={`w-full text-left px-4 py-3 border-2 transition-colors ${advanced ? 'border-jfb-rose bg-jfb-beige' : 'border-jfb-bordure bg-white hover:border-jfb-rose'}`}
@@ -112,12 +128,13 @@ export default function GeminiConfig({
         </button>
       )}
 
-      {/* Speaker profiles */}
+      {/* Profils locuteurs */}
       {speakers.map((spk, i) => {
         const profile = profiles.find(p => p.label === spk.label) ?? {
           label: spk.label, voice: femaleVoices[0]?.id ?? 'Aoede',
           name: '', age: '', role: '', nativeLanguage: '', personality: '', style: ''
         }
+        const engineBadge = useEdgeMulti ? 'Edge TTS' : useEL ? 'ElevenLabs' : null
         return (
           <div key={spk.label} className="border border-jfb-bordure bg-white p-4" style={{ borderRadius: '2px', borderLeft: `3px solid ${SPEAKER_COLORS[i] ?? '#888'}` }}>
             <div className="flex items-center gap-2 mb-3">
@@ -126,16 +143,18 @@ export default function GeminiConfig({
                 {spk.label}
               </span>
               <span className="text-sm font-semibold text-jfb-noir">Locuteur {spk.label}</span>
-              {useEL && (
-                <span className="ml-auto text-[10px] text-jfb-gris-cl px-1.5 py-0.5 bg-jfb-subtil border border-jfb-bordure" style={{ borderRadius: '2px' }}>ElevenLabs</span>
+              {engineBadge && (
+                <span className="ml-auto text-[10px] text-jfb-gris-cl px-1.5 py-0.5 bg-jfb-subtil border border-jfb-bordure" style={{ borderRadius: '2px' }}>{engineBadge}</span>
               )}
             </div>
 
-            <div className={`grid gap-2 mb-2 ${useEL ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            <div className={`grid gap-2 mb-2 ${isGemini ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <div>
                 <label
                   className={labelCls}
-                  title={useEL
+                  title={useEdgeMulti
+                    ? "Voix Edge TTS — synthèse locale, gratuite et illimitée. Accent natif selon la locale choisie. Choisissez des voix contrastées pour distinguer les locuteurs à l'écoute."
+                    : useEL
                     ? 'Voix ElevenLabs — 4 féminines et 4 masculines disponibles, choisies pour leur contraste. Pour les dialogues à plusieurs locuteurs du même genre, sélectionnez des voix aux caractères opposés.'
                     : "Paramètre déterminant. 16 voix disponibles : 8 féminines et 8 masculines, choisies pour leur contraste maximal. Pour différencier deux locuteurs, privilégier des voix aux caractères opposés (ex : 'jeune, légère' vs 'mature, posée')."}
                 >
@@ -163,8 +182,8 @@ export default function GeminiConfig({
                 </select>
               </div>
 
-              {/* Registre émotionnel — Gemini uniquement (les tags sont injectés dans le prompt) */}
-              {!useEL && (
+              {/* Registre émotionnel — Gemini uniquement (tags injectés dans le prompt) */}
+              {isGemini && (
                 <div>
                   <label className={labelCls} title="Levier de différenciation principal après la voix. Agit sur le rythme et l'intonation — pas sur le timbre fondamental. Pour deux locuteurs du même sexe, combiner 'Enthousiaste' (débit rapide) et 'Hésitant' (débit lent) donne le contraste perceptif le plus fort. 'Chaleureux (warm)' a été retiré car il efface les différences entre voix féminines calmes."><span className="underline decoration-dotted cursor-help">Registre émotionnel</span></label>
                   <select
@@ -179,7 +198,7 @@ export default function GeminiConfig({
             </div>
 
             {/* Profils avancés — Gemini uniquement */}
-            {!useEL && advanced && (
+            {isGemini && advanced && (
               <>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <div>
@@ -223,8 +242,8 @@ export default function GeminiConfig({
         )
       })}
 
-      {/* Contexte scénique — Gemini uniquement (EL ne prend pas de prompt système) */}
-      {!useEL && (
+      {/* Contexte scénique — Gemini uniquement (EL et Edge TTS ne prennent pas de prompt système) */}
+      {isGemini && (
         <div className="border border-jfb-bordure p-4" style={{ borderRadius: '2px' }}>
           <div className="flex items-baseline gap-2 mb-3">
             <p className="text-[11px] font-semibold text-jfb-rose uppercase tracking-[0.12em]">Contexte scénique</p>

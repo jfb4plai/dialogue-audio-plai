@@ -8,6 +8,7 @@ import LanguageSelector from '@/components/LanguageSelector'
 import SpeakerConfig from '@/components/SpeakerConfig'
 import GeminiConfig from '@/components/GeminiConfig'
 import SilenceSlider from '@/components/SilenceSlider'
+import { getEdgeMultiVoicesForLocale } from '@/lib/voice-routing'
 
 const LABELS = ['A', 'B', 'C', 'D']
 
@@ -71,27 +72,27 @@ export default function ConfigPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale, voices])
 
-  // Sync geminiProfiles quand speakers / voix disponibles changent.
-  // Règle : 2 locuteurs → voix Gemini ; 3-4 → voix ElevenLabs.
-  // Si le locuteur existait déjà avec une voix incompatible avec le nouveau mode, on la remplace.
+  // Sync geminiProfiles quand speakers / locale / voix disponibles changent.
+  // Règle : 2 locuteurs → Gemini ; 3-4 → Edge TTS si assez de voix, sinon ElevenLabs.
+  // Si le locuteur existait avec une voix incompatible avec le nouveau mode, on la remplace.
   useEffect(() => {
-    const useEL = speakers.length >= 3 && elevenlabsVoices.length > 0
-    const geminiIds = new Set(geminiVoices.map(v => v.id))
-    const elIds     = new Set(elevenlabsVoices.map(v => v.id))
+    const edgeVoices = speakers.length >= 3 ? getEdgeMultiVoicesForLocale(locale, speakers.length) : null
+    const useEdgeMulti = edgeVoices !== null
+    const useEL = speakers.length >= 3 && !useEdgeMulti && elevenlabsVoices.length > 0
+
+    const pool = useEdgeMulti ? edgeVoices : useEL ? elevenlabsVoices : geminiVoices
+    const poolIds = new Set(pool.map(v => v.id))
 
     dispatch({
       type: 'SET_GEMINI_PROFILES',
       payload: speakers.map((spk, i) => {
         const existing = geminiProfiles.find(p => p.label === spk.label)
         if (existing) {
-          const voiceOk = useEL ? elIds.has(existing.voice) : geminiIds.has(existing.voice)
-          if (!voiceOk) {
-            const pool = useEL ? elevenlabsVoices : geminiVoices
+          if (!poolIds.has(existing.voice)) {
             return { ...existing, voice: pool[i % pool.length]?.id ?? existing.voice }
           }
           return existing
         }
-        const pool = useEL ? elevenlabsVoices : geminiVoices
         return {
           label: spk.label,
           voice: pool[i % pool.length]?.id ?? 'Aoede',
@@ -100,7 +101,7 @@ export default function ConfigPage() {
       }),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [speakers, geminiVoices, elevenlabsVoices])
+  }, [speakers, locale, geminiVoices, elevenlabsVoices])
 
   // Gemini est le moteur par défaut — forcer si pas encore défini
   useEffect(() => {
@@ -218,13 +219,16 @@ export default function ConfigPage() {
               )}
               {speakers.length > 2 && (
                 <span className="text-[10px] text-jfb-gris-cl">
-                  ElevenLabs{elevenlabsVoices.length === 0 ? ' — non configuré' : ''} · 3-4 locuteurs
+                  {getEdgeMultiVoicesForLocale(locale, speakers.length)
+                    ? 'Edge TTS · 3-4 locuteurs'
+                    : `ElevenLabs${elevenlabsVoices.length === 0 ? ' — non configuré' : ''} · 3-4 locuteurs`}
                 </span>
               )}
             </div>
           </div>
 
           <GeminiConfig
+            locale={locale}
             speakers={speakers}
             geminiVoices={geminiVoices}
             elevenlabsVoices={elevenlabsVoices}
