@@ -46,6 +46,9 @@ export interface GeminiVoice {
   character: string
 }
 
+/** Même structure que GeminiVoice — voice ID = ElevenLabs voice_id */
+export type ElevenLabsVoice = GeminiVoice
+
 export interface GeminiSpeakerProfile {
   label: string
   voice: string

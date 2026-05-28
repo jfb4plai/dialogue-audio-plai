@@ -1,6 +1,6 @@
 'use client'
 import { createContext, useContext, useReducer, useEffect, useCallback, useState, ReactNode } from 'react'
-import { Speaker, GeminiSpeakerProfile, GeminiVoice, GenerateResult, VoicesConfig } from '@/types/dialogue'
+import { Speaker, GeminiSpeakerProfile, GeminiVoice, ElevenLabsVoice, GenerateResult, VoicesConfig } from '@/types/dialogue'
 import { DEFAULT_VOICES, SPEAKER_COLORS } from '@/lib/voices'
 
 export type WizardMode = 'dialogue' | 'podcast' | null
@@ -12,6 +12,7 @@ export interface WizardState {
   speakers: Speaker[]
   geminiProfiles: GeminiSpeakerProfile[]
   geminiVoices: GeminiVoice[]
+  elevenlabsVoices: ElevenLabsVoice[]
   ambient: string
   ambientIntensity: number
   silenceMs: number
@@ -29,8 +30,9 @@ type Action =
   | { type: 'SET_ENGINE';            payload: 'edge-tts' | 'gemini' }
   | { type: 'SET_SPEAKERS';          payload: Speaker[] }
   | { type: 'SET_GEMINI_PROFILES';   payload: GeminiSpeakerProfile[] }
-  | { type: 'SET_GEMINI_VOICES';     payload: GeminiVoice[] }
-  | { type: 'SET_AMBIENT';           payload: string }
+  | { type: 'SET_GEMINI_VOICES';       payload: GeminiVoice[] }
+  | { type: 'SET_ELEVENLABS_VOICES';   payload: ElevenLabsVoice[] }
+  | { type: 'SET_AMBIENT';             payload: string }
   | { type: 'SET_AMBIENT_INTENSITY'; payload: number }
   | { type: 'SET_SILENCE_MS';        payload: number }
   | { type: 'SET_SCRIPT';            payload: string }
@@ -51,6 +53,7 @@ const initialState: WizardState = {
   ],
   geminiProfiles: [],
   geminiVoices: [],
+  elevenlabsVoices: [],
   ambient: '',
   ambientIntensity: 0,
   silenceMs: 500,
@@ -71,7 +74,8 @@ function reducer(state: WizardState, action: Action): WizardState {
     case 'SET_ENGINE':            return { ...state, engine: action.payload }
     case 'SET_SPEAKERS':          return { ...state, speakers: action.payload }
     case 'SET_GEMINI_PROFILES':   return { ...state, geminiProfiles: action.payload }
-    case 'SET_GEMINI_VOICES':     return { ...state, geminiVoices: action.payload }
+    case 'SET_GEMINI_VOICES':       return { ...state, geminiVoices: action.payload }
+    case 'SET_ELEVENLABS_VOICES':   return { ...state, elevenlabsVoices: action.payload }
     case 'SET_AMBIENT':           return { ...state, ambient: action.payload }
     case 'SET_AMBIENT_INTENSITY': return { ...state, ambientIntensity: action.payload }
     case 'SET_SILENCE_MS':        return { ...state, silenceMs: action.payload }
@@ -81,7 +85,7 @@ function reducer(state: WizardState, action: Action): WizardState {
     case 'SET_NIVEAU':            return { ...state, niveau: action.payload }
     case 'SET_VOCABULAIRE':       return { ...state, vocabulaire: action.payload }
     case 'SET_CLASSE':            return { ...state, classe: action.payload }
-    case 'RESET':                 return { ...initialState, voices: state.voices, geminiVoices: state.geminiVoices }
+    case 'RESET':                 return { ...initialState, voices: state.voices, geminiVoices: state.geminiVoices, elevenlabsVoices: state.elevenlabsVoices }
     default:                      return state
   }
 }

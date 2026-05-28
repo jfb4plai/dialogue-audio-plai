@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import Link from 'next/link'
 import AuthWidget from '@/components/AuthWidget'
 import './globals.css'
 
@@ -14,7 +15,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-jfb-subtil min-h-screen">
         <header className="bg-white border-b border-jfb-bordure px-6 py-3 flex items-center justify-between">
           <Image src="/plai-logo.jpg" alt="PLAI" width={160} height={64} className="object-contain" priority />
-          <AuthWidget />
+          <div className="flex items-center gap-4">
+            <Link href="/aide" className="text-xs text-jfb-gris hover:text-jfb-rose transition-colors" title="Mode d'emploi">
+              ? Aide
+            </Link>
+            <AuthWidget />
+          </div>
         </header>
         {children}
       </body>

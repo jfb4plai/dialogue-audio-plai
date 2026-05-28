@@ -14,7 +14,7 @@ const LABELS = ['A', 'B', 'C', 'D']
 export default function ConfigPage() {
   const { state, dispatch, isHydrated } = useWizard()
   const router = useRouter()
-  const { mode, locale, niveau, engine, speakers, voices, geminiVoices, geminiProfiles, ambient, ambientIntensity, silenceMs } = state
+  const { mode, locale, niveau, engine, speakers, voices, geminiVoices, elevenlabsVoices, geminiProfiles, ambient, ambientIntensity, silenceMs } = state
 
   // Garde-fou : attend la hydratation sessionStorage avant de vérifier le mode
   useEffect(() => {
@@ -40,6 +40,17 @@ export default function ConfigPage() {
       .catch(() => {})
   }, [geminiVoices.length, dispatch])
 
+  // Fetch voix ElevenLabs si pas encore chargées
+  useEffect(() => {
+    if (elevenlabsVoices.length > 0) return
+    fetch('/api/elevenlabs-status')
+      .then(r => r.json())
+      .then(data => {
+        if (data.voices?.length) dispatch({ type: 'SET_ELEVENLABS_VOICES', payload: data.voices })
+      })
+      .catch(() => {})
+  }, [elevenlabsVoices.length, dispatch])
+
   // Sync voix des locuteurs quand locale change
   // Ne remplace la voix d'un locuteur que si elle n'est plus disponible dans la nouvelle locale
   useEffect(() => {
@@ -60,21 +71,36 @@ export default function ConfigPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale, voices])
 
-  // Sync geminiProfiles quand speakers change
+  // Sync geminiProfiles quand speakers / voix disponibles changent.
+  // Règle : 2 locuteurs → voix Gemini ; 3-4 → voix ElevenLabs.
+  // Si le locuteur existait déjà avec une voix incompatible avec le nouveau mode, on la remplace.
   useEffect(() => {
+    const useEL = speakers.length >= 3 && elevenlabsVoices.length > 0
+    const geminiIds = new Set(geminiVoices.map(v => v.id))
+    const elIds     = new Set(elevenlabsVoices.map(v => v.id))
+
     dispatch({
       type: 'SET_GEMINI_PROFILES',
-      payload: speakers.map(spk => {
+      payload: speakers.map((spk, i) => {
         const existing = geminiProfiles.find(p => p.label === spk.label)
-        return existing ?? {
+        if (existing) {
+          const voiceOk = useEL ? elIds.has(existing.voice) : geminiIds.has(existing.voice)
+          if (!voiceOk) {
+            const pool = useEL ? elevenlabsVoices : geminiVoices
+            return { ...existing, voice: pool[i % pool.length]?.id ?? existing.voice }
+          }
+          return existing
+        }
+        const pool = useEL ? elevenlabsVoices : geminiVoices
+        return {
           label: spk.label,
-          voice: geminiVoices[0]?.id ?? 'Aoede',
+          voice: pool[i % pool.length]?.id ?? 'Aoede',
           name: '', age: '', role: '', nativeLanguage: '', personality: '', style: '',
         }
       }),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [speakers, geminiVoices])
+  }, [speakers, geminiVoices, elevenlabsVoices])
 
   // Gemini est le moteur par défaut — forcer si pas encore défini
   useEffect(() => {
@@ -191,7 +217,9 @@ export default function ConfigPage() {
                 </button>
               )}
               {speakers.length > 2 && (
-                <span className="text-[10px] text-jfb-gris-cl">génération plus lente (3-4 locuteurs)</span>
+                <span className="text-[10px] text-jfb-gris-cl">
+                  ElevenLabs{elevenlabsVoices.length === 0 ? ' — non configuré' : ''} · 3-4 locuteurs
+                </span>
               )}
             </div>
           </div>
@@ -199,6 +227,7 @@ export default function ConfigPage() {
           <GeminiConfig
             speakers={speakers}
             geminiVoices={geminiVoices}
+            elevenlabsVoices={elevenlabsVoices}
             profiles={geminiProfiles}
             ambient={ambient}
             ambientIntensity={ambientIntensity}
