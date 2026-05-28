@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   const niveauNote = niveau.trim() ? `\n- Niveau des apprenants : ${niveau.trim()} (adapte la difficulté des mots sélectionnés)` : ''
   const vocForcéNote = vocabulaire.trim()
-    ? `\n- Vocabulaire obligatoire à inclure (ces mots DOIVENT figurer dans la sélection s'ils apparaissent dans le dialogue) : ${vocabulaire.trim()}`
+    ? `\n- Mots cibles prioritaires (DOIVENT toujours figurer dans la sélection — ce sont les cibles lexicales de l'activité, indépendamment de leur fréquence dans le dialogue) : ${vocabulaire.trim()}`
     : ''
 
   const userPrompt = `À partir de ce dialogue en ${langue}, sélectionne 8 à 12 mots ou expressions-clés utiles pour une activité lexicale pédagogique (ni trop fréquents, ni trop rares — évite les mots grammaticaux).${niveauNote}${vocForcéNote}

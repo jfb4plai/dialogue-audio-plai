@@ -42,14 +42,14 @@ export async function POST(req: NextRequest) {
   const { locale = 'nl_BE', type_dialogue = 'dialogue', nb_locuteurs = 2 } = body
   const langue = LOCALE_LABELS[locale] ?? locale
 
-  // ── Dialogue / Monologue mode ─────────────────────────────────────────────
   const {
     niveau = '', filiere = '', contexte = '', sujet = '',
     nb_repliques = 20, registre = 'mixte', vocabulaire = '',
+    roles = [],          // [{label: 'A', role: '...'}, ...]
     gemini_profiles = null,
   } = body
 
-  const vocNote = vocabulaire.trim() ? `\n- Vocabulaire à inclure obligatoirement : ${vocabulaire.trim()}` : ''
+  // ── Niveau CECRL ────────────────────────────────────────────────────────────
   const CEFR_DESC: Record<string, string> = {
     A1: 'A1 — phrases de 5 à 7 mots maximum, vocabulaire concret des 500 mots les plus fréquents, présent et impératif uniquement, zéro expression idiomatique',
     A2: 'A2 — phrases simples de 8 à 12 mots, vocabulaire des situations quotidiennes (~1500 mots), passé composé et futur proche autorisés',
@@ -58,23 +58,36 @@ export async function POST(req: NextRequest) {
     C1: 'C1 — registres variés, structures syntaxiques sophistiquées, vocabulaire étendu, implicite et sous-entendu assumés',
     C2: 'C2 — maîtrise parfaite, précision lexicale maximale, registre soutenu, jeu sur les subtilités rhétoriques',
   }
-  const niveauNote = niveau.trim() ? `\n- Niveau CECRL : ${CEFR_DESC[niveau.trim()] ?? niveau.trim()} — adapter STRICTEMENT la longueur des répliques, le choix lexical et la complexité syntaxique à ce niveau` : ''
+  const niveauNote = niveau.trim()
+    ? `\n- Niveau CECRL : ${CEFR_DESC[niveau.trim()] ?? niveau.trim()} — adapter STRICTEMENT la longueur des répliques, le choix lexical et la complexité syntaxique`
+    : ''
   const filiereNote = filiere.trim() ? `\n- Filière / domaine : ${filiere.trim()}` : ''
   const contexteNote = contexte.trim() ? `\n- Contexte situationnel : ${contexte.trim()}` : ''
-  const letters = ['A', 'B', 'C', 'D'].slice(0, Math.max(1, nb_locuteurs))
-  const locuteurs = type_dialogue === 'monologue'
-    ? 'A uniquement (monologue)'
-    : `${letters.join(', ')} (${nb_locuteurs} locuteurs alternés)`
 
-  // ── Gemini character profiles ─────────────────────────────────────────────
+  // ── Rôles des locuteurs ──────────────────────────────────────────────────────
+  const letters = ['A', 'B', 'C', 'D'].slice(0, Math.max(1, nb_locuteurs))
+  const rolesArray: { label: string; role: string }[] = Array.isArray(roles) ? roles : []
+  const rolesWithContent = rolesArray.filter(r => r.role?.trim())
+
+  let rolesNote = ''
+  if (rolesWithContent.length > 0) {
+    const lines = rolesWithContent.map(r => `  ${r.label} : ${r.role.trim()}`)
+    rolesNote = `\n- Rôles des personnages — IMPÉRATIF (le vocabulaire, le registre et l'initiative de chaque personnage DOIVENT correspondre à son rôle ; deux rôles différents = deux registres distincts) :\n${lines.join('\n')}`
+  }
+
+  // ── Vocabulaire cible ────────────────────────────────────────────────────────
+  const vocNote = vocabulaire.trim()
+    ? `\n- Mots cibles OBLIGATOIRES — chacun de ces mots DOIT apparaître au moins une fois dans le dialogue, réparti naturellement dans les répliques (pas tous groupés sur une seule ligne) : ${vocabulaire.trim()}`
+    : ''
+
+  // ── Profils Gemini (détails complémentaires) ─────────────────────────────────
   let profilesNote = ''
   if (gemini_profiles && Array.isArray(gemini_profiles)) {
     const profileLines = gemini_profiles
-      .map((p: { label: string; name?: string; age?: string; role?: string; nativeLanguage?: string; personality?: string; style?: string }) => {
+      .map((p: { label: string; name?: string; age?: string; nativeLanguage?: string; personality?: string; style?: string }) => {
         const parts = [
           p.name ? `prénom : ${p.name}` : null,
           p.age ? `âge : ${p.age}` : null,
-          p.role ? `rôle : ${p.role}` : null,
           p.nativeLanguage ? `langue maternelle : ${p.nativeLanguage}` : null,
           p.personality ? `personnalité : ${p.personality}` : null,
           p.style ? `registre émotionnel : ${p.style}` : null,
@@ -83,10 +96,21 @@ export async function POST(req: NextRequest) {
       })
       .filter(Boolean)
     if (profileLines.length) {
-      profilesNote = `\n- Personnages (à respecter dans les répliques) :\n${profileLines.join('\n')}`
+      profilesNote = `\n- Détails complémentaires des personnages :\n${profileLines.join('\n')}`
     }
   }
 
+  // ── Contraintes d'ouverture et de clôture ────────────────────────────────────
+  const roleA = rolesWithContent.find(r => r.label === 'A')?.role ?? ''
+  const ouvertureCtx = contexte.trim()
+    ? `entrée en matière naturelle pour "${contexte.trim()}"${roleA ? ` (rôle de A : ${roleA})` : ''}`
+    : `salutation ou amorce adaptée au sujet${roleA ? ` (rôle de A : ${roleA})` : ''}`
+
+  const locuteurs = type_dialogue === 'monologue'
+    ? 'A uniquement (monologue)'
+    : `${letters.join(', ')} (${nb_locuteurs} locuteurs alternés)`
+
+  // ── Prompts ──────────────────────────────────────────────────────────────────
   const systemPrompt = `Tu génères des scripts de dialogue pédagogiques pour des enseignants de la Fédération Wallonie-Bruxelles.
 
 RÈGLES ABSOLUES DE FORMAT :
@@ -109,11 +133,13 @@ Paramètres :
 - Type : ${locuteurs}
 - Nombre de répliques : ${nb_repliques}
 - Sujet : ${sujet || 'conversation courante'}
-- Registre : ${registre}${niveauNote}${filiereNote}${contexteNote}${vocNote}${profilesNote}
+- Registre : ${registre}${niveauNote}${filiereNote}${contexteNote}${rolesNote}${vocNote}${profilesNote}
 
-Génère maintenant le dialogue. Format strict : une réplique par ligne, préfixe ${letters.join(': ou ')+': uniquement'}. Tous les locuteurs (${letters.join(', ')}) doivent intervenir de façon équilibrée.
+CONTRAINTES DE STRUCTURE (non négociables) :
+- Réplique d'ouverture : la 1re réplique de A est une ${ouvertureCtx} — elle amorce naturellement la situation, sans explication méta.
+- Répliques de clôture : les 2 dernières répliques forment une fermeture explicite et complète — prise de congé, confirmation d'accord, résolution — cohérente avec les rôles et le contexte. Ne pas couper au milieu d'un échange.${vocabulaire.trim() ? `\n- Mots cibles : ${vocabulaire.trim().split(',').map((w: string) => w.trim()).filter(Boolean).join(', ')} — chacun doit apparaître au moins une fois dans le corps du dialogue.` : ''}
 
-La dernière réplique doit conclure naturellement la situation (prise de congé, accord, résolution, clôture) — cohérente avec le sujet, le contexte situationnel et les profils des personnages. Ne pas couper au milieu d'un échange.`
+Génère maintenant le dialogue. Format strict : une réplique par ligne, préfixe ${letters.join(': ou ')+': uniquement'}. Tous les locuteurs (${letters.join(', ')}) doivent intervenir de façon équilibrée.`
 
   const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -137,7 +163,7 @@ La dernière réplique doit conclure naturellement la situation (prise de congé
       const msg = err instanceof Error ? err.message : String(err)
       const isOverloaded = msg.includes('overloaded') || msg.includes('529')
       if (isOverloaded && attempt < 2) {
-        await delay(2000 * (attempt + 1)) // 2s puis 4s
+        await delay(2000 * (attempt + 1))
         continue
       }
       if (isOverloaded) {
