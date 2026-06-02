@@ -7,6 +7,7 @@ import { DialogueRecord } from '@/types/dialogue'
 
 export default function HistoryPanel() {
   const [records, setRecords] = useState<DialogueRecord[]>([])
+  const [confirmClearAll, setConfirmClearAll] = useState(false)
   const { dispatch } = useWizard()
   const router = useRouter()
 
@@ -42,11 +43,56 @@ export default function HistoryPanel() {
     router.push('/studio/script')
   }
 
+  const handleDelete = async (id: string) => {
+    const sb = getSupabase()
+    if (!sb) return
+    await sb.from('dialogues').delete().eq('id', id)
+    setRecords(prev => prev.filter(r => r.id !== id))
+  }
+
+  const handleClearAll = async () => {
+    const sb = getSupabase()
+    if (!sb) return
+    const { data: { user } } = await sb.auth.getUser()
+    if (!user) return
+    await sb.from('dialogues').delete().eq('user_id', user.id)
+    setRecords([])
+    setConfirmClearAll(false)
+  }
+
   if (records.length === 0) return null
 
   return (
     <div className="mt-8">
-      <h2 className="text-base font-semibold text-gray-700 mb-3">Mes dialogues récents</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-semibold text-gray-700">Mes dialogues récents</h2>
+        {confirmClearAll ? (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-jfb-gris">Supprimer tout ?</span>
+            <button
+              onClick={handleClearAll}
+              className="text-red-600 border border-red-300 px-2 py-0.5 hover:bg-red-50 transition-colors"
+              style={{ borderRadius: '2px' }}
+            >
+              Confirmer
+            </button>
+            <button
+              onClick={() => setConfirmClearAll(false)}
+              className="text-jfb-gris border border-jfb-bordure px-2 py-0.5 hover:border-jfb-noir transition-colors"
+              style={{ borderRadius: '2px' }}
+            >
+              Annuler
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmClearAll(true)}
+            className="text-xs text-jfb-gris-cl hover:text-red-500 transition-colors"
+          >
+            Tout effacer
+          </button>
+        )}
+      </div>
       <ul className="space-y-2">
         {records.map(r => (
           <li key={r.id} className="flex items-center justify-between bg-white border border-jfb-bordure px-4 py-2 text-sm" style={{ borderRadius: '2px' }}>
@@ -83,6 +129,13 @@ export default function HistoryPanel() {
                   Écouter
                 </a>
               )}
+              <button
+                onClick={() => handleDelete(r.id)}
+                className="text-xs text-jfb-gris-cl hover:text-red-500 transition-colors"
+                title="Supprimer ce dialogue"
+              >
+                ✕
+              </button>
             </div>
           </li>
         ))}
