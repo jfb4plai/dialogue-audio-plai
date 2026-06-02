@@ -78,6 +78,11 @@ export default function GenerateButton({ onGenerate, disabled }: Props) {
             <span>{step}</span>
           </div>
           <div className="text-xs text-jfb-gris-cl">{elapsed}s écoulées</div>
+          {elapsed >= 5 && !timedOut && (
+            <div className="text-xs text-jfb-gris-cl mt-1">
+              La génération prend généralement 30 à 90 secondes selon la longueur du dialogue.
+            </div>
+          )}
           {timedOut && (
             <div className="text-xs text-amber-600 mt-1">
               Le serveur TTS est en cours de démarrage — cela peut prendre jusqu&apos;à 2 minutes lors de la première utilisation.
