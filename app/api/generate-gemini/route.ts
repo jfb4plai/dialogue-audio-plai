@@ -20,6 +20,10 @@ export async function POST(req: NextRequest) {
   if (!process.env.HF_SPACE_SECRET) return NextResponse.json({ error: 'HF_SPACE_SECRET not configured' }, { status: 500 })
 
   const body = await req.json()
+  const scriptLines = (body.script as string).split('\n').filter((l: string) => /^[A-D]:/.test(l))
+  if (scriptLines.length > 80) {
+    return NextResponse.json({ error: 'Script trop long (max 80 répliques)' }, { status: 400 })
+  }
   let data: Record<string, unknown>
   try {
     const res = await fetch(`${hfUrl}/generate-gemini`, {
