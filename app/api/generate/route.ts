@@ -6,7 +6,10 @@ export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const scriptLines = (body.script as string).split('\n').filter((l: string) => /^[A-D]:/.test(l))
+  if (!body.script || typeof body.script !== 'string') {
+    return NextResponse.json({ error: 'Champ script manquant' }, { status: 400 })
+  }
+  const scriptLines = body.script.split('\n').filter((l: string) => /^[A-D]:/.test(l))
   if (scriptLines.length > 80) {
     return NextResponse.json({ error: 'Script trop long (max 80 répliques)' }, { status: 400 })
   }
