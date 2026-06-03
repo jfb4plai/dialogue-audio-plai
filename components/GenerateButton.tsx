@@ -9,8 +9,8 @@ interface Props {
 }
 
 function getProgressMessage(elapsed: number): string {
-  if (elapsed < 60) return 'Génération en cours — 30s à 2 min selon la longueur du script'
-  if (elapsed < 150) return 'Plus lent que prévu — le serveur continue, ne fermez pas la page.'
+  if (elapsed < 60) return 'Génération en cours — ne fermez pas la page'
+  if (elapsed < 240) return 'Plus lent que prévu — le serveur continue, ne fermez pas la page.'
   return 'Génération longue détectée. Si aucun résultat dans 30 secondes, rechargez et réessayez.'
 }
 
