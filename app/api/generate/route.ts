@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getUserId } from '@/lib/get-user-id'
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
+  const scriptLines = (body.script as string).split('\n').filter((l: string) => /^[A-D]:/.test(l))
+  if (scriptLines.length > 80) {
+    return NextResponse.json({ error: 'Script trop long (max 80 répliques)' }, { status: 400 })
+  }
+
   const hfUrl = process.env.NEXT_PUBLIC_HF_SPACE_URL
 
   if (!hfUrl) {
