@@ -65,8 +65,6 @@ function AudioPlayer({ src }: { src: string }) {
   return (
     <div className="bg-jfb-subtil border border-jfb-bordure p-4 space-y-3" style={{ borderRadius: '2px' }}>
       <audio ref={audioRef} src={src} preload="metadata" />
-
-      {/* Progress bar */}
       <div className="flex items-center gap-2 text-xs text-jfb-gris">
         <span className="w-8 text-right">{fmt(currentTime)}</span>
         <input
@@ -76,11 +74,7 @@ function AudioPlayer({ src }: { src: string }) {
         />
         <span className="w-8">{fmt(duration)}</span>
       </div>
-
-      {/* Controls row */}
       <div className="flex items-center gap-4 flex-wrap">
-
-        {/* Play/Pause */}
         <button
           onClick={togglePlay}
           className="w-10 h-10 bg-jfb-noir text-white flex items-center justify-center hover:bg-jfb-noir-doux text-lg flex-shrink-0"
@@ -89,8 +83,6 @@ function AudioPlayer({ src }: { src: string }) {
         >
           {playing ? '⏸' : '▶'}
         </button>
-
-        {/* Speed */}
         <div className="flex items-center gap-2 flex-1 min-w-40">
           <span className="text-xs text-jfb-gris w-16 flex-shrink-0">Vitesse {speed.toFixed(1)}×</span>
           <input
@@ -99,8 +91,6 @@ function AudioPlayer({ src }: { src: string }) {
             className="flex-1 accent-jfb-rose"
           />
         </div>
-
-        {/* Volume */}
         <div className="flex items-center gap-2 flex-1 min-w-36">
           <span className="text-xs text-jfb-gris w-14 flex-shrink-0">
             {volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'} {Math.round(volume * 100)}%
@@ -111,8 +101,6 @@ function AudioPlayer({ src }: { src: string }) {
             className="flex-1 accent-jfb-rose"
           />
         </div>
-
-        {/* Speed presets */}
         <div className="flex gap-1">
           {[0.5, 0.75, 1, 1.25, 1.5, 2].map(s => (
             <button
@@ -121,7 +109,7 @@ function AudioPlayer({ src }: { src: string }) {
               className={`px-2 py-0.5 text-xs font-medium ${
                 speed === s ? 'bg-jfb-noir text-white' : 'bg-jfb-subtil text-jfb-gris hover:bg-jfb-beige border border-jfb-bordure'
               }`}
-            style={{ borderRadius: '2px' }}
+              style={{ borderRadius: '2px' }}
             >
               {s}×
             </button>
@@ -132,12 +120,51 @@ function AudioPlayer({ src }: { src: string }) {
   )
 }
 
+/** Returns countdown label for QR code activation based on generated_at.
+ *  Internet Archive delay = 10 min. Updates every 30s. */
+function useQrCountdown(generatedAt: string | undefined): string {
+  const IA_DELAY_MS = 10 * 60 * 1000
+  const [label, setLabel] = useState('')
+
+  useEffect(() => {
+    if (!generatedAt) return
+    const update = () => {
+      const elapsed = Date.now() - new Date(generatedAt).getTime()
+      const remaining = IA_DELAY_MS - elapsed
+      if (remaining <= 0) {
+        setLabel('QR actif ✓')
+        return
+      }
+      const mins = Math.ceil(remaining / 60000)
+      setLabel(`QR actif dans ~${mins} min`)
+    }
+    update()
+    const id = setInterval(update, 30_000)
+    return () => clearInterval(id)
+  }, [generatedAt])
+
+  return label
+}
+
 export default function AudioResult({ result }: Props) {
+  const qrLabel = useQrCountdown(result.generated_at)
+
   const downloadQR = () => {
     if (!result.qr_base64) return
     const link = document.createElement('a')
     link.href = `data:image/png;base64,${result.qr_base64}`
     link.download = 'dialogue-qr.png'
+    link.click()
+  }
+
+  const downloadMp3 = () => {
+    const link = document.createElement('a')
+    if (result.audio_data) {
+      link.href = `data:audio/mpeg;base64,${result.audio_data}`
+    } else {
+      link.href = `/api/download?url=${encodeURIComponent(result.audio_url)}`
+    }
+    link.download = 'dialogue.mp3'
     link.click()
   }
 
@@ -150,7 +177,12 @@ export default function AudioResult({ result }: Props) {
     ? `data:audio/mpeg;base64,${result.audio_data}`
     : result.audio_url
 
-  // Après F5, audio_data est absent — Internet Archive met ~10 min à activer l'URL
+  const TWENTY_MINUTES = 20 * 60 * 1000
+  const uploadLikelyFailed = result.audio_url
+    && !result.audio_data
+    && result.generated_at
+    && (Date.now() - new Date(result.generated_at).getTime()) > TWENTY_MINUTES
+
   const TEN_MINUTES = 10 * 60 * 1000
   const isRecentWithoutData = !result.audio_data && result.generated_at
     && (Date.now() - new Date(result.generated_at).getTime()) < TEN_MINUTES
@@ -172,18 +204,27 @@ export default function AudioResult({ result }: Props) {
         </div>
       )}
 
-      <p className="text-xs text-amber-600 mt-3 mb-3">
-        ⏳ Le lien QR code devient actif ~10 minutes après la génération (délai Internet Archive).
-      </p>
+      {uploadLikelyFailed && (
+        <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 px-3 py-2" style={{ borderRadius: '2px' }}>
+          Le partage via QR code a échoué (Internet Archive indisponible). L&apos;audio reste téléchargeable via le bouton ci-dessous.
+        </div>
+      )}
 
       {/* QR code */}
-      <div className="flex flex-col items-center mb-4">
+      <div className="flex flex-col items-center mb-4 mt-4">
         {result.qr_base64 ? (
-          <img
-            src={`data:image/png;base64,${result.qr_base64}`}
-            alt="QR code audio"
-            className="w-48 h-48 border border-jfb-bordure" style={{ borderRadius: '2px' }}
-          />
+          <>
+            <img
+              src={`data:image/png;base64,${result.qr_base64}`}
+              alt="QR code audio"
+              className="w-48 h-48 border border-jfb-bordure" style={{ borderRadius: '2px' }}
+            />
+            {qrLabel && (
+              <p className={`text-xs mt-1 font-medium ${qrLabel.includes('✓') ? 'text-green-700' : 'text-amber-600'}`}>
+                {qrLabel}
+              </p>
+            )}
+          </>
         ) : (
           <div className="w-48 h-48 border border-jfb-bordure flex items-center justify-center bg-jfb-subtil" style={{ borderRadius: '2px' }}>
             <span className="text-xs text-jfb-gris text-center px-4">
@@ -203,7 +244,6 @@ export default function AudioResult({ result }: Props) {
         <p className="font-medium mb-1 text-jfb-noir">Répliques :</p>
         <ul className="space-y-0.5">
           {result.segments.map(s => {
-            // Edge TTS: 'nl-BE-DenaNeural' → 'DenaNeural' ; Gemini: 'Aoede' → 'Aoede'
             const voiceLabel = s.voice.includes('-')
               ? s.voice.split('-').slice(2).join('-').replace('Neural', '') || s.voice
               : s.voice
@@ -218,22 +258,12 @@ export default function AudioResult({ result }: Props) {
 
       {/* Buttons */}
       <div className="flex flex-wrap gap-2">
-        {result.audio_url ? (
-          <a
-            href={`/api/download?url=${encodeURIComponent(result.audio_url)}`}
-            download="dialogue.mp3"
-            className="px-4 py-2 bg-jfb-noir text-white text-sm font-medium hover:bg-jfb-noir-doux" style={{ borderRadius: '2px' }}
-          >
-            Télécharger MP3
-          </a>
-        ) : (
-          <span
-            title="Lien indisponible — Internet Archive n'a pas pu recevoir le fichier. Régénérez le dialogue pour obtenir un lien de partage."
-            className="px-4 py-2 bg-jfb-subtil text-jfb-gris border border-jfb-bordure text-sm font-medium cursor-not-allowed opacity-50" style={{ borderRadius: '2px' }}
-          >
-            Télécharger MP3
-          </span>
-        )}
+        <button
+          onClick={downloadMp3}
+          className="px-4 py-2 bg-jfb-noir text-white text-sm font-medium hover:bg-jfb-noir-doux" style={{ borderRadius: '2px' }}
+        >
+          Télécharger MP3
+        </button>
         <button onClick={downloadQR}
           disabled={!result.qr_base64}
           className="px-4 py-2 bg-jfb-subtil text-jfb-gris border border-jfb-bordure text-sm font-medium hover:bg-jfb-beige disabled:opacity-50 disabled:cursor-not-allowed" style={{ borderRadius: '2px' }}>
@@ -246,7 +276,6 @@ export default function AudioResult({ result }: Props) {
           Copier le lien
         </button>
       </div>
-
     </div>
   )
 }

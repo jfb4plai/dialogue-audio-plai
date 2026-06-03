@@ -37,6 +37,7 @@ export interface GenerateResult {
   duration_seconds: number
   segments: Segment[]
   generated_at?: string // ISO timestamp set client-side at generation time
+  upload_status?: 'pending' | 'ok' | 'failed'
 }
 
 export interface GeminiVoice {
