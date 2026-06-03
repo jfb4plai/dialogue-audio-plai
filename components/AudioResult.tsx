@@ -260,7 +260,8 @@ export default function AudioResult({ result }: Props) {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={downloadMp3}
-          className="px-4 py-2 bg-jfb-noir text-white text-sm font-medium hover:bg-jfb-noir-doux" style={{ borderRadius: '2px' }}
+          disabled={!result.audio_data && !result.audio_url}
+          className="px-4 py-2 bg-jfb-noir text-white text-sm font-medium hover:bg-jfb-noir-doux disabled:opacity-50 disabled:cursor-not-allowed" style={{ borderRadius: '2px' }}
         >
           Télécharger MP3
         </button>
