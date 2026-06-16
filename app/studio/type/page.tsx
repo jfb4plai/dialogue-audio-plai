@@ -1,10 +1,17 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWizard } from '@/lib/wizard-context'
 
 export default function TypePage() {
   const { dispatch, reset } = useWizard()
   const router = useRouter()
+  const [offHours, setOffHours] = useState(false)
+
+  useEffect(() => {
+    const h = new Date().getHours()
+    setOffHours(h < 7 || h >= 21)
+  }, [])
 
   const choose = (mode: 'dialogue' | 'podcast') => {
     reset()
@@ -24,6 +31,12 @@ export default function TypePage() {
       <div className="mb-6 text-xs text-jfb-gris bg-amber-50 border border-amber-200 px-3 py-2 leading-relaxed" style={{ borderRadius: '2px' }}>
         L&apos;audio généré est hébergé publiquement sur <strong>Internet Archive</strong>. Ne pas inclure de données personnelles (noms d&apos;élèves, informations privées) dans les scripts.
       </div>
+
+      {offHours && (
+        <div className="mb-6 text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2 leading-relaxed" style={{ borderRadius: '2px' }}>
+          En dehors des heures scolaires (7h–21h), le moteur vocal peut nécessiter un délai de démarrage de 30 à 90 secondes lors de la première génération.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
