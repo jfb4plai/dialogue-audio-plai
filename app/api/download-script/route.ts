@@ -37,10 +37,11 @@ export async function POST(req: NextRequest) {
 
   const doc = new Document({ sections: [{ children: paragraphs }] })
   const buffer = await Packer.toBuffer(doc)
+  const uint8 = new Uint8Array(buffer)
 
   const filename = docTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.docx'
 
-  return new NextResponse(buffer, {
+  return new NextResponse(uint8, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'Content-Disposition': `attachment; filename="${filename}"`,
