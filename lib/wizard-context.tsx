@@ -66,6 +66,7 @@ const initialState: WizardState = {
 }
 
 const SESSION_KEY = 'da_wizard_state'
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000 // 24h
 
 function reducer(state: WizardState, action: Action): WizardState {
   switch (action.type) {
@@ -90,7 +91,7 @@ function reducer(state: WizardState, action: Action): WizardState {
   }
 }
 
-// Serialise l'état pour sessionStorage (exclut audio_data — peut être > 10 MB)
+// Serialise l'état pour localStorage (exclut audio_data — peut être > 10 MB)
 function serialize(state: WizardState): string {
   const safe = {
     ...state,
@@ -100,13 +101,17 @@ function serialize(state: WizardState): string {
     // voices et geminiVoices sont rechargées depuis l'API — inutile de les stocker
     voices: undefined,
     geminiVoices: undefined,
+    _expiresAt: Date.now() + SESSION_TTL_MS,
   }
   return JSON.stringify(safe)
 }
 
 function deserialize(raw: string): Partial<WizardState> | null {
   try {
-    return JSON.parse(raw)
+    const parsed = JSON.parse(raw)
+    // Ignorer les états expirés
+    if (parsed._expiresAt && Date.now() > parsed._expiresAt) return null
+    return parsed
   } catch {
     return null
   }
@@ -125,9 +130,9 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState)
   const [isHydrated, setIsHydrated] = useState(false)
 
-  // Hydrate depuis sessionStorage au montage — toujours marquer isHydrated à la fin
+  // Hydrate depuis localStorage au montage — toujours marquer isHydrated à la fin
   useEffect(() => {
-    const raw = sessionStorage.getItem(SESSION_KEY)
+    const raw = localStorage.getItem(SESSION_KEY)
     const saved = raw ? deserialize(raw) : null
     if (saved) {
       if (saved.mode !== undefined)            dispatch({ type: 'SET_MODE',              payload: saved.mode ?? null })
@@ -147,13 +152,13 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true)
   }, [])
 
-  // Sync vers sessionStorage à chaque changement
+  // Sync vers localStorage à chaque changement
   useEffect(() => {
-    sessionStorage.setItem(SESSION_KEY, serialize(state))
+    localStorage.setItem(SESSION_KEY, serialize(state))
   }, [state])
 
   const reset = useCallback(() => {
-    sessionStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem(SESSION_KEY)
     dispatch({ type: 'RESET' })
   }, [])
 

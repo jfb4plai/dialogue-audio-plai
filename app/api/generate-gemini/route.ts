@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getUserId } from '@/lib/get-user-id'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
+  const userId = await getUserId(req)
+  const rl = await checkRateLimit(req, userId, { anonMax: 5, authMax: 15 })
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Limite atteinte : 5 générations audio par heure. Réessayez plus tard.' },
+      { status: 429 }
+    )
+  }
+
   const hfUrl = process.env.NEXT_PUBLIC_HF_SPACE_URL
   if (!hfUrl) return NextResponse.json({ error: 'HF_SPACE_URL not configured' }, { status: 500 })
+  if (!process.env.HF_SPACE_SECRET) return NextResponse.json({ error: 'HF_SPACE_SECRET not configured' }, { status: 500 })
 
   const body = await req.json()
   let data: Record<string, unknown>

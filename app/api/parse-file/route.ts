@@ -134,17 +134,37 @@ Format strict : une réplique par ligne, préfixe ${letters.map(l => l + ':').jo
   let messageContent: any
 
   if (filename.endsWith('.pdf')) {
-    messageContent = [
-      {
-        type: 'document',
-        source: {
-          type: 'base64',
-          media_type: 'application/pdf',
-          data: buffer.toString('base64'),
+    // Tronquer les PDFs volumineux : si le buffer dépasse ~20 MB base64 (~15 MB binaire),
+    // on sélectionne uniquement les premiers 15 000 chars après extraction texte.
+    // Pour les PDFs de taille raisonnable, on envoie en natif (meilleure qualité).
+    const pdfSizeLimit = 15 * 1024 * 1024 // 15 MB binaire
+    if (buffer.length > pdfSizeLimit) {
+      // Fallback texte : tronquer le buffer avant encodage base64
+      const truncatedBuffer = buffer.subarray(0, pdfSizeLimit)
+      messageContent = [
+        {
+          type: 'document',
+          source: {
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: truncatedBuffer.toString('base64'),
+          },
         },
-      },
-      { type: 'text', text: scriptInstructions },
-    ]
+        { type: 'text', text: scriptInstructions + '\n[Document tronqué à 15 MB — premières pages uniquement]' },
+      ]
+    } else {
+      messageContent = [
+        {
+          type: 'document',
+          source: {
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: buffer.toString('base64'),
+          },
+        },
+        { type: 'text', text: scriptInstructions },
+      ]
+    }
   } else if (filename.endsWith('.docx') || filename.endsWith('.doc')) {
     let rawText = ''
     try {

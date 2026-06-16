@@ -46,6 +46,12 @@ export default function ScriptPage() {
     if (isHydrated && mode === 'podcast') setSource('ai-file')
   }, [isHydrated, mode])
 
+  // Warmup silencieux du HF Space pour réduire le cold start au moment de la génération
+  useEffect(() => {
+    const hfUrl = process.env.NEXT_PUBLIC_HF_SPACE_URL
+    if (hfUrl) fetch(`${hfUrl}/health`, { method: 'GET' }).catch(() => {})
+  }, [])
+
   // Garde-fou
   useEffect(() => {
     if (isHydrated && !mode) router.replace('/studio/type')
