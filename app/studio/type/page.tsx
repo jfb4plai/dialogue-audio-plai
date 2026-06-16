@@ -21,6 +21,10 @@ export default function TypePage() {
         </p>
       </div>
 
+      <div className="mb-6 text-xs text-jfb-gris bg-amber-50 border border-amber-200 px-3 py-2 leading-relaxed" style={{ borderRadius: '2px' }}>
+        L&apos;audio généré est hébergé publiquement sur <strong>Internet Archive</strong>. Ne pas inclure de données personnelles (noms d&apos;élèves, informations privées) dans les scripts.
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         {/* Dialogue */}

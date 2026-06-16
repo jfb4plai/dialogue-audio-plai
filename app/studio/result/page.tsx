@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWizard } from '@/lib/wizard-context'
 import AudioResult from '@/components/AudioResult'
@@ -10,13 +10,26 @@ export default function ResultPage() {
   const { state, reset, isHydrated } = useWizard()
   const router = useRouter()
   const { mode, result, script, locale, speakers, niveau, vocabulaire } = state
+  const [redirecting, setRedirecting] = useState(false)
 
-  // Garde-fou
+  // Garde-fou : affiche un message 2s avant de renvoyer au début
   useEffect(() => {
-    if (isHydrated && !result) router.replace('/studio/type')
+    if (isHydrated && !result) {
+      setRedirecting(true)
+      const t = setTimeout(() => router.replace('/studio/type'), 2000)
+      return () => clearTimeout(t)
+    }
   }, [isHydrated, result, router])
 
-  if (!isHydrated || !result) return null
+  if (!isHydrated) return null
+
+  if (redirecting || !result) {
+    return (
+      <main className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <p className="text-jfb-gris text-sm">Session expirée — redirection vers le début…</p>
+      </main>
+    )
+  }
 
   const handleNew = () => {
     reset()

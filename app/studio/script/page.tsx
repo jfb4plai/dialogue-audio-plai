@@ -308,6 +308,33 @@ export default function ScriptPage() {
           />
         </div>
 
+        {/* Export script DOCX */}
+        {script.trim().length > 0 && (
+          <div className="flex justify-end">
+            <button
+              onClick={async () => {
+                const label = `${mode ?? 'script'} ${locale}`.trim()
+                const res = await fetch('/api/download-script', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ script, title: label }),
+                })
+                if (!res.ok) return
+                const blob = await res.blob()
+                const a = document.createElement('a')
+                a.href = URL.createObjectURL(blob)
+                a.download = `${label.replace(/\s+/g, '_')}.docx`
+                a.click()
+                URL.revokeObjectURL(a.href)
+              }}
+              className="text-xs border border-jfb-bordure text-jfb-gris px-3 py-1.5 hover:border-jfb-noir hover:text-jfb-noir bg-white transition-colors"
+              style={{ borderRadius: '2px' }}
+            >
+              Télécharger le script (.docx)
+            </button>
+          </div>
+        )}
+
         {/* Notice RGPD Internet Archive */}
         <div className="text-xs text-jfb-gris bg-jfb-subtil border border-jfb-bordure px-3 py-2 leading-relaxed" style={{ borderRadius: '2px' }}>
           L&apos;audio généré est hébergé publiquement sur Internet Archive. Ne pas inclure de données personnelles (noms d&apos;élèves, informations privées) dans le script.

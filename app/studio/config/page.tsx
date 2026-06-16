@@ -245,20 +245,31 @@ export default function ConfigPage() {
         {/* CTA */}
         {(() => {
           const isDisabled = !canContinue || (isPodcast && !geminiConfigured)
+          const missing: string[] = []
+          if (!locale) missing.push('choisir une langue cible')
+          if (speakers.length < 2) missing.push('ajouter au moins 2 locuteurs')
+          if (isPodcast && !geminiConfigured) missing.push('configurer Gemini TTS (contactez le Pôle PLAI)')
           return (
-            <button
-              onClick={handleContinue}
-              disabled={isDisabled}
-              className="w-full py-3 text-sm font-semibold text-white transition-colors"
-              style={{
-                borderRadius: '2px',
-                backgroundColor: isDisabled ? '#5a5a5a' : '#1a1a1a',
-                opacity: isDisabled ? 0.5 : 1,
-                cursor: isDisabled ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Continuer vers le script →
-            </button>
+            <div>
+              <button
+                onClick={handleContinue}
+                disabled={isDisabled}
+                className="w-full py-3 text-sm font-semibold text-white transition-colors"
+                style={{
+                  borderRadius: '2px',
+                  backgroundColor: isDisabled ? '#5a5a5a' : '#1a1a1a',
+                  opacity: isDisabled ? 0.5 : 1,
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Continuer vers le script →
+              </button>
+              {isDisabled && missing.length > 0 && (
+                <p className="mt-2 text-xs text-amber-700">
+                  Pour continuer : {missing.join(' · ')}.
+                </p>
+              )}
+            </div>
           )
         })()}
       </div>
