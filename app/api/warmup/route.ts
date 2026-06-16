@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const hfUrl = process.env.HF_SPACE_URL
+  const hfUrl = process.env.NEXT_PUBLIC_HF_SPACE_URL
   if (!hfUrl) {
     return NextResponse.json({ error: 'HF_SPACE_URL non défini' }, { status: 500 })
   }
