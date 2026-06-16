@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
-  // Réservé aux appels Vercel Cron — rejette tout appel externe
-  const isCron = req.headers.get('x-vercel-cron') === '1'
-  if (!isCron) {
+  // Réservé aux appels Vercel Cron — x-vercel-cron (header Vercel) ou CRON_SECRET (Authorization)
+  const isCronHeader = req.headers.get('x-vercel-cron') === '1'
+  const cronSecret = process.env.CRON_SECRET
+  const authHeader = req.headers.get('authorization')
+  const isCronSecret = cronSecret ? authHeader === `Bearer ${cronSecret}` : false
+  if (!isCronHeader && !isCronSecret) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
