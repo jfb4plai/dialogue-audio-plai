@@ -5,3 +5,7 @@ node_modules/
 .vercel
 .env*.local
 tsconfig.tsbuildinfo
+
+# Dependances et secrets (ajoute 2026-10-04)
+.env.*
+!.env*.example
